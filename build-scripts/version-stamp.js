@@ -37,7 +37,7 @@ module.exports = ({ majorVersion, minorVersion, buildVersion, manifestsPaths, so
     const resultsSolution = replace.sync({
         files: solutionPaths,
         from: /\<Version\>[0-9]+.[0-9]+.[0-9]+.[0-9]+\<\/Version>/g,
-        to: `<Version>${majorVersion}.${minorVersion}.0.${buildVersion}</Version>`,
+        to: `<Version>${majorVersion}.${minorVersion}.${buildVersion}.0</Version>`,
         countMatches: true,
     });
     console.log(resultsSolution);
