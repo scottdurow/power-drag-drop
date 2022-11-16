@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+  <control namespace="dev1" constructor="PowerDragDrop" version="1.0.19" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
+    <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.-->
+    <external-service-usage enabled="false"></external-service-usage>
+    <property name="DropZoneID" description-key="DropZoneID_Desc" display-name-key="DropZoneID" required="true" usage="input" of-type="SingleLine.Text"/>
+    <property name="OtherDropZoneIDs" description-key="OtherDropZoneIDs_Desc" display-name-key="OtherDropZoneIDs" required="true" usage="input" of-type="SingleLine.Text"/>
+    <property name="IsMasterZone" description-key="IsMasterZone_Desc" display-name-key="IsMasterZone" required="true" usage="input" of-type="TwoOptions"/>
+    <property name="MaximumItems" description-key="MaximumItems_Desc" display-name-key="MaximumItems" required="false" usage="input" of-type="SingleLine.Text"/>
+    
+    <!-- Input Event Properties-->
+    <property name="InputEvent" description-key="InputEvent_Desc" display-name-key="InputEvent" required="false" usage="input" of-type="SingleLine.Text"/>
+
+    <!-- Bound Style Properties -->    
+    <property name="BackgroundColor" description-key="BackgroundColor_Desc" display-name-key="BackgroundColor" required="false" usage="input" of-type="SingleLine.Text" default-value="transparent"/>
+    <property name="BorderColor" description-key="BorderColor_Desc" display-name-key="BorderColor" required="false" usage="input" of-type="SingleLine.Text" default-value="rgba(255, 255, 255, 0.4)"/>
+    <property name="BorderWidth" description-key="BorderWidth_Desc" display-name-key="BorderWidth" required="false" usage="input" of-type="Decimal" default-value="1"/>
+    <property name="BorderRadius" description-key="BorderRadius_Desc" display-name-key="BorderRadius" required="false" usage="input" of-type="Decimal" default-value="0"/>
+    <property name="ItemBackgroundColor" description-key="ItemBackgroundColor_Desc" display-name-key="ItemBackgroundColor" required="false" usage="input" of-type="SingleLine.Text" default-value="rgba(255, 255, 255, 1)"/>
+    <property name="ItemFont" description-key="ItemFont_Desc" display-name-key="ItemFont" required="false" usage="bound" of-type="SingleLine.Text" default-value="'Segoe UI'"/>
+    <property name="ItemFontSize" description-key="ItemFontSize_Desc" display-name-key="ItemFontSize" required="false" usage="bound" of-type="Decimal" default-value="12"/>
+    <property name="ItemFontColor" description-key="ItemFontColor_Desc" display-name-key="ItemFontColor" required="false" usage="bound" of-type="SingleLine.Text" default-value="rgba(33, 37, 41, 1)"/>
+    <property name="ItemBorderRadius" description-key="ItemBorderRadius_Desc" display-name-key="ItemBorderRadius" required="false" usage="bound" of-type="Decimal" default-value="4"/>
+    <property name="ItemBorderWidth" description-key="ItemBorderWidth_Desc" display-name-key="ItemBorderWidth" required="false" usage="bound" of-type="Decimal" default-value="1"/>
+    <property name="ItemBorderColor" description-key="ItemBorderColor_Desc" display-name-key="ItemBorderColor" of-type="SingleLine.Text" usage="bound" required="false" default-value="rgba(0,0,0,.125)"/>
+    <property name="ItemGap" description-key="ItemGap_Desc" display-name-key="ItemGap" required="false" usage="bound" of-type="Whole.None" default-value="4"/>
+    <property name="ItemTemplate" description-key="ItemTemplate_Desc" display-name-key="ItemTemplate" required="false" usage="bound" of-type="Multiple"/>
+    <property name="PaddingLeft" description-key="PaddingLeft_Desc" display-name-key="PaddingLeft" of-type="Whole.None" usage="bound" default-value="0" />
+    <property name="PaddingRight" description-key="PaddingRight_Desc" display-name-key="PaddingRight" of-type="Whole.None" usage="bound" default-value="0" />
+    <property name="PaddingTop" description-key="PaddingTop_Desc" display-name-key="PaddingTop" of-type="Whole.None" usage="bound" default-value="0" />
+    <property name="PaddingBottom" description-key="PaddingBottom_Desc" display-name-key="PaddingBottom"  of-type="Whole.None" usage="bound" default-value="0" />
+    <property name="RotateOnDrag" description-key="RotateOnDrag_Desc" display-name-key="RotateOnDrag" of-type="Enum" usage="bound" required="false" default-value="0">
+      <value name="None" display-name-key="None">0</value>
+      <value name="ClockwiseSmall" display-name-key="ClockwiseSmall">1</value>
+      <value name="ClockwiseLarge" display-name-key="ClockwiseLarge">2</value>
+      <value name="AnitclockwiseSmall" display-name-key="AnitclockwiseSmall">3</value>
+      <value name="AnitcockwiseLarge" display-name-key="AnitclockwiseLarge">4</value>
+    </property>
+    <property name="PreserveSort" description-key="PreserveSort_Desc" display-name-key="PreserveSort" required="true" usage="bound" of-type="TwoOptions"/>
+    <property name="Scroll" description-key="Scroll_Desc" display-name-key="Scroll" required="true" usage="bound" of-type="TwoOptions" default-value="true"/>
+    <property name="DelaySelect" description-key="DelaySelect_Desc" display-name-key="DelaySelect" of-type="Enum" usage="bound" required="false" default-value="0">
+      <value name="No" display-name-key="No">0</value>
+      <value name="Yes" display-name-key="Yes">1</value>
+      <value name="TouchOnly" display-name-key="TouchOnly">2</value>
+    </property>
+    <property name="Trace" description-key="Trace_Desc" display-name-key="Trace" usage="input" of-type="TwoOptions"/>
+
+    <!-- OnDrop Output Properties -->
+    <event name="OnDrop" display-name-key="OnDrop" description-key="OnDrop_Desc" />
+    <property name="DroppedPosition" description-key="DroppedPosition_Desc" display-name-key="DroppedPosition" usage="output" of-type="Whole.None"/>
+    <property name="DroppedSource" description-key="DroppedSource_Desc" display-name-key="DroppedSource" usage="output" of-type="SingleLine.Text"/>
+    <property name="DroppedTarget" description-key="DroppedTarget_Desc" display-name-key="DroppedTarget" usage="output" of-type="SingleLine.Text"/>
+    <property name="DroppedId" description-key="DroppedId_Desc" display-name-key="DroppedId" usage="output" of-type="SingleLine.Text"/>
+    <property name="CurrentItems" description-key="CurrentItems_Desc" display-name-key="CurrentItems" of-type="Object" usage="output" />
+
+    <!-- OnAction Output Properties -->
+    <event name="OnAction" display-name-key="OnAction" description-key="OnAction_Desc" />
+    <property name="ActionName" description-key="ActionName_Desc" display-name-key="ActionName" usage="output" of-type="SingleLine.Text"/>
+    <property name="ActionItemId" description-key="ActionItemId_Desc" display-name-key="ActionItemId" usage="output" of-type="SingleLine.Text"/>
+    
+
+    <!-- A hidden property used by Canvas to get the output object schema -->
+    <property name="ItemSchema" display-name-key="ItemSchema" of-type="SingleLine.Text" usage="input" hidden="true"/>
+   
+
+    <!-- Dataset Properties-->
+    <data-set name="items" description-key="items_Desc" display-name-key="items">
+       <property-set name="IdColumn" display-name-key="IdColumn" of-type="SingleLine.Text" usage="bound" required="false" />
+       <property-set name="ZoneColumn" display-name-key="ZoneColumn" of-type="SingleLine.Text" usage="bound" required="false" />
+    </data-set>
+
+    <property-dependencies>
+      <property-dependency input="ItemSchema" output="CurrentItems" required-for="schema" />
+    </property-dependencies>
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/PowerDragDrop.css" order="1" />
+      <resx path="strings/PowerDragDrop.1033.resx" version="1.0.0" />
+    </resources>
+  </control>
+</manifest>
