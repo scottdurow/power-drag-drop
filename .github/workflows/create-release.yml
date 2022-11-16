@@ -1,0 +1,102 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 50
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "12.x"
+
+      - run: npm ci
+        working-directory: "./build-scripts"
+      
+      - name: Get Next Semantic Version
+        id: get_version
+        uses: paulhatch/semantic-version@v5.0.0-beta
+        with:
+          # The prefix to use to identify tags
+          tag_prefix: "v"
+          # A string which, if present in a git commit, indicates that a change represents a
+          # major (breaking) change, supports regular expressions wrapped with '/'
+          major_pattern: "(MAJOR)"
+          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
+          minor_pattern: "(MINOR)"
+          # A string to determine the format of the version output
+          version_format: "${major}.${minor}.${patch}-prerelease${increment}"
+          # If this is set to true, *every* commit will be treated as a new version.
+          bump_each_commit: false
+          # If true, the body of commits will also be searched for major/minor patterns to determine the version type.
+          search_commit_body: false
+          # The output method used to generate list of users, 'csv' or 'json'.
+          user_format_type: "csv"
+
+      - name: Version Stamp Code Components
+        uses: actions/github-script@v2
+        with:
+          script: |
+            const version = require(`${process.env.GITHUB_WORKSPACE}/build-scripts/version-stamp.js`)
+            version({
+              majorVersion: ${{ steps.get_version.outputs.major }},
+              minorVersion: ${{ steps.get_version.outputs.minor }},
+              buildVersion: ${{ steps.get_version.outputs.patch }},
+              manifestsPaths: [
+                `${process.env.GITHUB_WORKSPACE}/code-component/PowerDragDrop`
+                ],
+              solutionPaths: `${process.env.GITHUB_WORKSPACE}/Solution/src/Other/Solution.xml`,
+              beta: false}
+              )
+
+      - run: npm ci
+        working-directory: "./PowerDragDrop"
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: "5.x"
+
+      - run: dotnet build -c release
+        working-directory: "./Solution"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version_tag }}
+          release_name: Release ${{ steps.get_version.outputs.version_tag }}
+          draft: true
+          prerelease: true
+
+      - name: Upload Release Asset
+        id: upload-release-asset1
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: Solution/bin/Release/Solution.zip
+          asset_name: PowerCATCodeComponents_unmanaged_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
+          draft: false.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset
+        id: upload-release-asset2
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: Solution/bin/Release/Solution_managed.zip
+          asset_name: PowerCATCodeComponents_managed_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
+          asset_content_type: application/zip
