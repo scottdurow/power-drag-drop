@@ -58,14 +58,14 @@ jobs:
               )
 
       - run: npm ci
-        working-directory: "./PowerDragDrop"
+        working-directory: "./code-component"
 
       - uses: actions/setup-dotnet@v1
         with:
           dotnet-version: "5.x"
 
       - run: dotnet build -c release
-        working-directory: "./Solution"
+        working-directory: "./solution"
 
       - name: Create Release
         id: create_release
@@ -86,7 +86,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Solution/bin/Release/Solution.zip
-          asset_name: PowerCATCodeComponents_unmanaged_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
+          asset_name: PowerDragDrop_unmanaged_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
           draft: false.zip
           asset_content_type: application/zip
 
@@ -98,5 +98,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: Solution/bin/Release/Solution_managed.zip
-          asset_name: PowerCATCodeComponents_managed_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
+          asset_name: PowerDragDrop_managed_${{ steps.get_version.outputs.major }}_${{ steps.get_version.outputs.minor }}_${{ steps.get_version.outputs.patch }}.zip
           asset_content_type: application/zip
