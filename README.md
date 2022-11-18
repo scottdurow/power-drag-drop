@@ -3,7 +3,7 @@ The Power Drag Drop component allows you to create drag and drop user interfaces
 
 Here is an example of a Kanban style UI built using the **PowerDragDrop** component on top of Microsoft Dataverse.
 
-![kanban](C:\repos\power-drag-drop\media\kanban.gif)
+![kanban](media\kanban.gif)
 
 #### Power Drag and Drop works with:
 1. Custom pages with ***Scale to fit*** turned **OFF**
