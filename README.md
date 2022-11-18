@@ -57,8 +57,9 @@ The Power Drag Drop component requires there to be a single **master zone** per 
    1. IdColumn: `"Id"`
    2. ZoneColumn: `"Zone"`
 
-You should now see a list of items appear in the **PowerDragDrop** component. 
-    ![image-20221118113406938](media/image-simple-list.png)
+You should now see a list of items appear in the **PowerDragDrop** component.
+
+![image-20221118113406938](media/image-simple-list.png)
 
 > **Note**: If you only see a set of empty items, check that the Name column is added to the Fields as described above. 
 
@@ -73,8 +74,9 @@ You should now see a list of items appear in the **PowerDragDrop** component.
 
 3. Go back to the original master zone and **toggle** the **Master Zone** between `On` and `Off` to reset it as the master.
 
-4. You should now be able to drag items between the two zones: 
-    ![DragDrop](media/simple-list-drag-drop.gif)
+4. You should now be able to drag items between the two zones:
+
+![DragDrop](media/simple-list-drag-drop.gif)
 
     Each time an item is dropped, the `OnDrop` event is raised.
 
@@ -113,8 +115,9 @@ The **PowerDragDrop** component has style properties such as border/background c
 </div>
 ```
 
-This will look similar to the following: 
-    ![templates](media/templates.gif)
+This will look similar to the following:
+
+![templates](media/templates.gif)
 
 > ***Note***: The html will be stripped of any script elements.
 
@@ -137,8 +140,9 @@ If you need to add action buttons to your template, you can do so by adding a cl
 </div>
 ```
 
-If you then add a label with the Text set to : `$"{PowerDragDrop1.ActionName} {PowerDragDrop1.ActionItemId}"`, you will see something similar to: 
-    ![actions](media/actions.gif)
+If you then add a label with the Text set to : `$"{PowerDragDrop1.ActionName} {PowerDragDrop1.ActionItemId}"`, you will see something similar to:
+
+![actions](media/actions.gif)
 
 > **Note**: The clickable elements do not need to be buttons, they could be clickable links or `div` elements.
 
