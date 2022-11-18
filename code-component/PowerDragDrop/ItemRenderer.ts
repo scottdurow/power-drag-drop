@@ -28,11 +28,8 @@ export class ItemRenderer {
 
     public updateContainerSize(context: ComponentFramework.Context<IInputs>): void {
         const mainContainer = this.mainContainer;
-        const listContainer = this.listContainer;
-
         mainContainer.style.width = `${context.mode.allocatedWidth}px`;
         mainContainer.style.height = `${context.mode.allocatedHeight}px`;
-        listContainer.style.height = `${context.mode.allocatedHeight}px`;
     }
 
     private checkForAliases(context: ComponentFramework.Context<IInputs>) {
