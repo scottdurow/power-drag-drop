@@ -11,6 +11,7 @@ Here is an example of a Kanban style UI built using the **PowerDragDrop** compon
 
 > **Note:** Phone layout canvas apps are not supported due to the CSS transformations they apply - instead, create a responsive tablet canvas app.
 
+Video demo: https://youtu.be/mlrg0OfF4e8
 ## Quick Start
 Follow these steps to quickly get up and running with the Power Drag Drop component.
 
