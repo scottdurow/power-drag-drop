@@ -16,11 +16,11 @@
       <UniqueName>PowerDragDrop</UniqueName>
       <LocalizedNames>
         <!-- Localized Cds Publisher Name in language code-->
-        <LocalizedName description="Power Drag Drop" languagecode="1033" />
+        <LocalizedName description="Scott Durow" languagecode="1033" />
       </LocalizedNames>
       <Descriptions>
         <!-- Description of Cds Publisher in language code -->
-        <Description description="Power Drag Drop Code Component" languagecode="1033" />
+        <Description description="PowerDragDrop by Scott Durow. See https://github.com/scottdurow/power-drag-drop for latest version." languagecode="1033" />
       </Descriptions>
       <EMailAddress xsi:nil="true"></EMailAddress>
       <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
