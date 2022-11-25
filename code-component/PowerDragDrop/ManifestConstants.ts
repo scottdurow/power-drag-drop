@@ -31,6 +31,8 @@ export enum ManifestConstants {
     ItemFont = 'ItemFont',
     DelaySelect = 'DelaySelect',
     ItemGap = 'ItemGap',
+    Direction = 'Direction',
+    Wrap = 'Wrap',
 }
 
 export enum InputEvents {
@@ -60,6 +62,8 @@ export const RENDER_TRIGGER_PROPERTIES: string[] = [
     ManifestConstants.PaddingTop,
     ManifestConstants.PaddingBottom,
     ManifestConstants.Scroll,
+    ManifestConstants.Direction,
+    ManifestConstants.Wrap,
 ];
 
 export const ZONE_REGISTRATION_PROPERTIES: string[] = [
@@ -74,3 +78,9 @@ export const ZONE_OPTIONS_PROPERTIES: string[] = [
     ManifestConstants.Scroll,
     ManifestConstants.DelaySelect,
 ];
+
+export enum DirectionEnum {
+    Auto = '0',
+    Vertical = '1',
+    Horizontal = '2',
+}

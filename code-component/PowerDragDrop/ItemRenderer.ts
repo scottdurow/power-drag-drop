@@ -4,7 +4,7 @@ import sanitize from 'sanitize-html';
 import { CurrentItem } from './CurrentItemSchema';
 import { GetOutputObjectRecord } from './DynamicSchema';
 import { IInputs } from './generated/ManifestTypes';
-import { ItemProperties } from './ManifestConstants';
+import { DirectionEnum, ItemProperties } from './ManifestConstants';
 import { SanitizeHtmlOptions } from './SanitizeHtmlOptions';
 import { CSS_STYLE_CLASSES, ORIGINAL_POSITION_ATTRIBUTE, ORIGINAL_ZONE_ATTRIBUTE, RECORD_ID_ATTRIBUTE } from './Styles';
 
@@ -46,6 +46,7 @@ export class ItemRenderer {
         return true;
     }
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     public renderItems(
         context: ComponentFramework.Context<IInputs>,
     ): { itemsRendered?: CurrentItem[]; sortOrder?: string[] } {
@@ -96,6 +97,7 @@ export class ItemRenderer {
 
         // Style the list container
         this.updateContainerStyles(parameters);
+        this.updateContainerFlex(parameters);
 
         // Items for this drop zone (or all items if the drop zone is not set)
         const thisDropZoneId = parameters.DropZoneID.raw ?? '';
@@ -160,8 +162,7 @@ export class ItemRenderer {
         if (!context.parameters.items.columns) {
             return [];
         }
-        const columns = context.parameters.items.columns.filter((c) => c.order !== -1);
-        return columns;
+        return context.parameters.items.columns.filter((c) => c.order !== -1);
     }
 
     private updateContainerStyles(parameters: IInputs) {
@@ -194,6 +195,26 @@ export class ItemRenderer {
         }
         if (parameters.Scroll?.raw !== null) {
             listContainer.style.overflow = parameters.Scroll?.raw ? 'auto' : 'hidden';
+        }
+    }
+
+    private updateContainerFlex(parameters: IInputs) {
+        const listContainer = this.listContainer;
+        if (parameters.Direction?.raw !== null || parameters.Wrap?.raw !== null) {
+            // Set the list direction and wrap
+            // Auto for standard ordered list behavior
+            const direction = parameters.Direction?.raw;
+            const wrap = parameters.Wrap?.raw;
+
+            if (direction === DirectionEnum.Auto && wrap !== true) {
+                listContainer.style.flexDirection = '';
+                listContainer.style.flexWrap = '';
+                listContainer.style.display = '';
+            } else {
+                listContainer.style.flexDirection = direction === DirectionEnum.Vertical ? 'column' : 'row';
+                listContainer.style.flexWrap = wrap === true ? 'wrap' : 'nowrap';
+                listContainer.style.display = 'flex';
+            }
         }
     }
 

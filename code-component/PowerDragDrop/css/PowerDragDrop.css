@@ -19,6 +19,7 @@ li.powerdnd-item {
   margin-block-start: 0px;
   margin-block-end: 0px;
   height: 100%;
+  align-content: flex-start;
 }
 
 .powerdnd-list ul {

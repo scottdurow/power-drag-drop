@@ -12,3 +12,6 @@
 # msbuild output directories
 /bin
 /obj
+
+# Jest coverage results
+**/coverage

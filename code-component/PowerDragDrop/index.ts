@@ -85,6 +85,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         this.registerZones = debounce(this.registerZones, REGISTER_ZONES_DEBOUNCE, true);
     }
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     public updateView(context: ComponentFramework.Context<IInputs>): void {
         this.trace('updateView', context.parameters.DropZoneID, context.updatedProperties);
         this.context = context as ContextExtended<IInputs>;
@@ -278,6 +279,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         }, REGISTER_ZONE_TICK);
     }
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     private registerZones(): boolean {
         const { parameters } = this.context;
         const masterDropZoneId = this.removeSpaces(parameters.DropZoneID.raw ?? 'dropZone');

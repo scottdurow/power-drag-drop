@@ -291,7 +291,16 @@
   <data name="DelaySelect" xml:space="preserve">
     <value>Delay Select</value>
   </data>
-  
-
-
+  <data name="Direction" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="Direction_Desc" xml:space="preserve">
+    <value>The direction to render the items in the list</value>
+  </data>
+  <data name="Wrap" xml:space="preserve">
+    <value>Wrap</value>
+  </data>
+  <data name="Wrap_Desc" xml:space="preserve">
+    <value>Control wrapping of the items in the list</value>
+  </data>
 </root>
