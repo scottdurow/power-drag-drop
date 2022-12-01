@@ -77,6 +77,7 @@ export const ZONE_OPTIONS_PROPERTIES: string[] = [
     ManifestConstants.MaximumItems,
     ManifestConstants.Scroll,
     ManifestConstants.DelaySelect,
+    ManifestConstants.PreserveSort,
 ];
 
 export enum DirectionEnum {
