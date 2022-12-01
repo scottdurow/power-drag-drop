@@ -30,6 +30,7 @@ interface RegisteredZone {
     zoneId: string;
     maximumItems: number | undefined;
     sortable: Sortable;
+    onActionClick: (ev: MouseEvent) => void;
 }
 
 const defaultSortableOptions: Sortable.Options = {
@@ -321,21 +322,26 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
 
             if (zoneElement !== null && (!existingZoneRegistration || registeredOnDifferentElement)) {
                 this.trace('registerZones CREATE', zoneId);
-                this.zonesRegistered[zoneId] = {
+                const sortable = new Sortable(zoneElement, {
+                    ...this.getDynamicSortableOptions(),
+                    group: masterDropZoneId,
+                    onChoose: this.onChoose,
+                    onUnchoose: this.onUnChoose,
+                    onEnd: this.onEnd,
+                    onMove: this.onMove,
+                    filter: this.actionFilter,
+                });
+                const zoneRegistration = {
                     zoneId: zoneId,
                     index: index,
                     maximumItems: maximumItems[index],
-                    sortable: new Sortable(zoneElement, {
-                        ...this.getDynamicSortableOptions(),
-                        group: masterDropZoneId,
-                        onChoose: this.onChoose,
-                        onUnchoose: this.onUnChoose,
-                        onEnd: this.onEnd,
-                        onFilter: this.onFilter,
-                        onMove: this.onMove,
-                        filter: this.actionFilter,
-                    }),
+                    onActionClick: (ev: MouseEvent) => {
+                        this.actionClick(ev, zoneElement);
+                    },
+                    sortable: sortable,
                 };
+                this.zonesRegistered[zoneId] = zoneRegistration;
+                zoneElement.addEventListener('click', zoneRegistration.onActionClick);
             }
         });
 
@@ -377,7 +383,12 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         const zone = this.zonesRegistered[zoneId];
         // Prevent un-registering a zone if there is currently a drag happening
         if (this.currentItemZone === null) {
-            zone.sortable.destroy();
+            try {
+                zone.sortable.destroy();
+                zone.sortable.el.removeEventListener('click', zone.onActionClick);
+            } catch (e) {
+                this.trace('unRegisterZone Error', e);
+            }
         } else {
             this.sortablesToDestroy.push(zone.sortable);
         }
@@ -416,18 +427,6 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             console.debug('PowerDragDrop:', message, data);
         }
     }
-
-    private onFilter = (event: Sortable.SortableEvent) => {
-        const actionItemId = event.item.getAttribute(RECORD_ID_ATTRIBUTE);
-        const actionName = this.getActionFromClass(event.target);
-        if (actionItemId && actionName) {
-            this.raiseOnActionScheduled = true;
-            // Remove the action specifier
-            this.actionName = actionName.replace(CSS_STYLE_CLASSES.ActionClassPrefix, '');
-            this.actionItemId = actionItemId;
-            this.notifyOutputChanged();
-        }
-    };
 
     private removeSpaces(input: string) {
         return input.replace(/\s/gi, '');
@@ -492,5 +491,33 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             return this.getActionFromClass(targetElement) !== undefined;
         }
         return false;
+    };
+
+    actionClick = (ev: MouseEvent, zoneElement: HTMLElement): void => {
+        // For accessibility, action elements raise the OnAction event here
+        // rather than the onFilter event which only fires for touch events
+        if (ev.target && (ev.target as HTMLElement).className) {
+            const actionName = this.getActionFromClass(ev.target as HTMLElement);
+            // Actions have a class prefixed with action-
+            if (actionName) {
+                // Find the closest sortable item using the item class identifier
+                const element = Sortable.utils.closest(
+                    ev.target as HTMLElement,
+                    '.' + CSS_STYLE_CLASSES.Item,
+                    zoneElement,
+                );
+                if (element) {
+                    // Get the item id from the data attribute
+                    const actionItemId = element.getAttribute(RECORD_ID_ATTRIBUTE);
+                    if (actionItemId) {
+                        this.raiseOnActionScheduled = true;
+                        // Remove the action specifier and raise the event
+                        this.actionName = actionName.replace(CSS_STYLE_CLASSES.ActionClassPrefix, '');
+                        this.actionItemId = actionItemId;
+                        this.notifyOutputChanged();
+                    }
+                }
+            }
+        }
     };
 }
