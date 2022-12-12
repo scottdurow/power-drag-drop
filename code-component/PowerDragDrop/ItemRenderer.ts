@@ -6,12 +6,19 @@ import { GetOutputObjectRecord } from './DynamicSchema';
 import { IInputs } from './generated/ManifestTypes';
 import { DirectionEnum, ItemProperties } from './ManifestConstants';
 import { SanitizeHtmlOptions } from './SanitizeHtmlOptions';
-import { CSS_STYLE_CLASSES, ORIGINAL_POSITION_ATTRIBUTE, ORIGINAL_ZONE_ATTRIBUTE, RECORD_ID_ATTRIBUTE } from './Styles';
+import {
+    CSS_STYLE_CLASSES,
+    ORIGINAL_POSITION_ATTRIBUTE,
+    ORIGINAL_ZONE_ATTRIBUTE,
+    RECORD_ID_ATTRIBUTE,
+    RENDER_VERSION_ATTRIBUTE,
+} from './Styles';
 
 export class ItemRenderer {
     public rendered = false;
     public mainContainer: HTMLElement;
     public listContainer: HTMLElement;
+    public renderVersion = 0;
 
     constructor(container: HTMLDivElement) {
         // Create root containers
@@ -55,7 +62,8 @@ export class ItemRenderer {
         const currentItems: CurrentItem[] = [];
         const originalOrder: string[] = [];
         const listContainer = this.listContainer;
-
+        this.renderVersion++;
+        this.listContainer.setAttribute(RENDER_VERSION_ATTRIBUTE, this.renderVersion.toString());
         if (!this.checkForAliases(context)) return {};
         this.rendered = true;
         const isMasterZone = parameters.IsMasterZone.raw === true;
@@ -117,6 +125,7 @@ export class ItemRenderer {
             index++;
             const itemRow: HTMLElement = document.createElement('li');
             itemRow.classList.add(CSS_STYLE_CLASSES.Item);
+            itemRow.setAttribute(RENDER_VERSION_ATTRIBUTE, this.renderVersion.toString());
 
             // Style accordingly to the parameters
             this.styleItemElement(itemRow, parameters);
@@ -152,7 +161,7 @@ export class ItemRenderer {
     private removeAllExistingElements() {
         const listContainer = this.listContainer;
         while (listContainer.firstChild && listContainer.firstChild.parentNode) {
-            listContainer.firstChild.parentNode.removeChild(listContainer.firstChild);
+            listContainer.removeChild(listContainer.firstChild);
         }
     }
 

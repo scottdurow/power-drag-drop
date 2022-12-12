@@ -20,6 +20,7 @@ describe('ItemRenderer', () => {
             >
               <ul
                 class="powerdnd-list"
+                data-render-version="1"
                 style="overflow: hidden;"
               />
             </div>
@@ -42,6 +43,7 @@ describe('ItemRenderer', () => {
             >
               <ul
                 class="powerdnd-list"
+                data-render-version="1"
                 style="overflow: hidden; flex-direction: row; flex-wrap: nowrap; display: flex;"
               />
             </div>
@@ -59,6 +61,7 @@ describe('ItemRenderer', () => {
             >
               <ul
                 class="powerdnd-list"
+                data-render-version="1"
                 style="overflow: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
               />
             </div>
@@ -78,6 +81,7 @@ describe('ItemRenderer', () => {
             >
               <ul
                 class="powerdnd-list"
+                data-render-version="1"
                 style="overflow: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
               />
             </div>

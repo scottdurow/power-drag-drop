@@ -13,9 +13,12 @@ import {
 } from './ManifestConstants';
 import {
     CSS_STYLE_CLASSES,
+    DRAGGED_FROM_ZONE_ATTRIBUTE,
+    DRAG_INVALID,
     ORIGINAL_POSITION_ATTRIBUTE,
     ORIGINAL_ZONE_ATTRIBUTE,
     RECORD_ID_ATTRIBUTE,
+    RENDER_VERSION_ATTRIBUTE,
     ROTATION_CLASSES,
 } from './Styles';
 
@@ -40,7 +43,7 @@ const defaultSortableOptions: Sortable.Options = {
     scrollSpeed: 10,
     forceFallback: true,
     fallbackOnBody: true,
-    removeCloneOnHide: false,
+    removeCloneOnHide: true,
     ghostClass: CSS_STYLE_CLASSES.Ghost,
     chosenClass: CSS_STYLE_CLASSES.Chosen,
     dataIdAttr: RECORD_ID_ATTRIBUTE,
@@ -128,22 +131,13 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
 
         // Event if this is not a master zone, the reset event triggers a re-render to enable items
         // to be re-created after drop
+        const renderTriggerProperties = this.hasPropertyChanged(RENDER_TRIGGER_PROPERTIES);
         const updateItems =
-            !this.itemRenderer.rendered ||
-            resetDatasetTriggered ||
-            datasetChanged ||
-            this.hasPropertyChanged(RENDER_TRIGGER_PROPERTIES);
+            !this.itemRenderer.rendered || resetDatasetTriggered || datasetChanged || renderTriggerProperties;
 
         if (!parameters.items.loading && updateItems) {
-            const renderResult = this.itemRenderer.renderItems(context);
-            if (renderResult.itemsRendered && renderResult.sortOrder) {
-                this.currentItems = renderResult.itemsRendered;
-                this.originalOrder = renderResult.sortOrder;
-
-                if (isMasterZone) {
-                    this.notifyOutputChanged();
-                }
-            }
+            this.trace('renderItems', { resetDatasetTriggered, datasetChanged, renderTriggerProperties });
+            this.renderItems();
         }
 
         if (clearChangesTriggered) {
@@ -176,6 +170,18 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         if (this.isMasterZone()) {
             if (this.registerTimer) window.clearTimeout(this.registerTimer);
             this.unregisterAllZones();
+        }
+    }
+
+    private renderItems(): void {
+        const renderResult = this.itemRenderer.renderItems(this.context);
+        if (renderResult.itemsRendered && renderResult.sortOrder) {
+            this.currentItems = renderResult.itemsRendered;
+            this.originalOrder = renderResult.sortOrder;
+
+            if (this.isMasterZone()) {
+                this.notifyOutputChanged();
+            }
         }
     }
 
@@ -329,6 +335,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                     onUnchoose: this.onUnChoose,
                     onEnd: this.onEnd,
                     onMove: this.onMove,
+                    onClone: this.onClone,
                     filter: this.actionFilter,
                 });
                 const zoneRegistration = {
@@ -436,11 +443,38 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         // Check if we have reached the maximum items for the drop zone
         if (event.to) {
             const targetZoneId = this.getZoneId(event.to as HTMLElement);
-            const zone = this.zonesRegistered[targetZoneId];
-            if (zone && zone.maximumItems && zone.maximumItems > 0) {
-                const currentItemCount = zone.sortable.toArray().length;
-                return currentItemCount < zone.maximumItems;
+            const sourceZoneId = this.getZoneId(event.from as HTMLElement);
+            const targetZone = this.zonesRegistered[targetZoneId];
+            const sourceZone = this.zonesRegistered[sourceZoneId];
+            // Check if the source zone has re-rendered - if so this item is invalid
+            const sourceZoneRenderVersion = sourceZone.sortable.el.getAttribute(RENDER_VERSION_ATTRIBUTE);
+            const draggedRenderVersion = event.dragged.getAttribute(RENDER_VERSION_ATTRIBUTE);
+            const originalZone = event.dragged.getAttribute(ORIGINAL_ZONE_ATTRIBUTE);
+            const invalidDrag = Sortable.utils.is(event.dragged, '.' + DRAG_INVALID);
+            if (invalidDrag) {
+                this.trace('onMove - Invalid drag item');
+                return false;
             }
+            if (sourceZoneRenderVersion !== draggedRenderVersion && originalZone === sourceZoneId) {
+                this.trace('onMove - Render version mismatch');
+                return false;
+            }
+            if (targetZone && targetZone.maximumItems && targetZone.maximumItems > 0) {
+                const currentItemCount = targetZone.sortable.toArray().length;
+                return currentItemCount < targetZone.maximumItems;
+            }
+        }
+    };
+
+    onClone = (event: SortableEvent): void => {
+        const origEl = event.item;
+        const invalidDragItem = !origEl.parentElement;
+        Sortable.utils.toggleClass(origEl, DRAG_INVALID, invalidDragItem);
+        if (invalidDragItem) {
+            // The item being dragged has no parent container since the zone has been removed
+            // or the items have been re-rendered. This makes the drag item invalid
+            origEl.style.display = 'none';
+            this.trace('onClone -Invalid drag');
         }
     };
 
@@ -449,6 +483,13 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             const draggedElement = event.item; // dragged HTMLElement
             const targetZone = event.to; // target list
             const sourceZone = event.from; // previous list
+
+            // Check if there is an invalid item being dragged
+            // and prevent it being dropped anywhere
+            if (Sortable.utils.is(draggedElement, '.' + DRAG_INVALID)) {
+                this.trace('onEnd - Invalid drop');
+                return;
+            }
 
             const newPosition = event.newDraggableIndex; // element's new index within new parent, only counting draggable elements
             const itemId = draggedElement.getAttribute(RECORD_ID_ATTRIBUTE) as string;
@@ -476,12 +517,16 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         }
     };
 
-    onUnChoose = (): void => {
+    onUnChoose = (event: SortableEvent): void => {
         this.currentItemZone = null;
+        this.trace('onUnChoose', this.context.parameters.DropZoneID.raw, event.item.innerText);
+        event.item.removeAttribute(DRAGGED_FROM_ZONE_ATTRIBUTE);
     };
 
     onChoose = (event: SortableEvent): void => {
         this.currentItemZone = this.getZoneId(event.from);
+        this.trace('onChoose', this.context.parameters.DropZoneID.raw, event.item.innerText);
+        event.item.setAttribute(DRAGGED_FROM_ZONE_ATTRIBUTE, this.currentItemZone);
     };
 
     actionFilter = (event: Event | TouchEvent): boolean => {
