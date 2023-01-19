@@ -75,7 +75,7 @@ export const SanitizeHtmlOptions = {
         'button',
     ],
     allowedAttributes: {
-        '*': ['style'],
+        '*': ['style', 'aria-label', 'title'],
         a: ['href', 'name', 'target', 'id', 'class', 'style'],
         button: ['id', 'class', 'type', 'style'],
         img: ['src', 'srcset', 'alt', 'title', 'width', 'height', 'loading', 'style'],
