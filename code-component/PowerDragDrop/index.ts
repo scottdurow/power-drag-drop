@@ -27,6 +27,7 @@ import {
 // without registering a callback method in teh global scope
 const REGISTER_ZONES_DEBOUNCE = 500;
 const REGISTER_ZONE_TICK = 1000;
+const DRAG_START_DELAY = 100;
 
 interface RegisteredZone {
     index: number;
@@ -47,8 +48,6 @@ const defaultSortableOptions: Sortable.Options = {
     ghostClass: CSS_STYLE_CLASSES.Ghost,
     chosenClass: CSS_STYLE_CLASSES.Chosen,
     dataIdAttr: RECORD_ID_ATTRIBUTE,
-    delay: 100,
-    delayOnTouchOnly: true,
 };
 
 export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs, IOutputs> {
@@ -371,8 +370,8 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             scroll: this.context.parameters.Scroll?.raw === true,
             sort: this.context.parameters.PreserveSort?.raw !== true,
             dragClass: dragClass,
-            delay: this.context.parameters.DelaySelect?.raw !== '0' ? 200 : 0,
-            delayOnTouchOnly: this.context.parameters.DelaySelect?.raw === '2',
+            delay: this.context.parameters.DelaySelect?.raw !== '0' ? DRAG_START_DELAY : undefined,
+            delayOnTouchOnly: this.context.parameters.DelaySelect?.raw === '2' ? true : false,
         } as Sortable.Options;
     }
 
