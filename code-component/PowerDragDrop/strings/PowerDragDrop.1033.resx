@@ -303,4 +303,16 @@
   <data name="Wrap_Desc" xml:space="preserve">
     <value>Control wrapping of the items in the list</value>
   </data>
+  <data name="AccessibleLabel" xml:space="preserve">
+    <value>Accessible Label</value>
+  </data>
+  <data name="AccessibleLabel_Desc" xml:space="preserve">
+    <value>Screen reader aria label</value>
+  </data>
+  <data name="AllowFocus" xml:space="preserve">
+    <value>Allow Focus</value>
+  </data>
+  <data name="AllowFocus_Desc" xml:space="preserve">
+    <value>Can the drag drop area accept focus using tab. Screen readers will announce the name of the area and the number of items.</value>
+  </data>
 </root>

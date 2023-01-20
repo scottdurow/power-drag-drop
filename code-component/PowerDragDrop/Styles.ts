@@ -21,6 +21,7 @@ export enum CSS_STYLE_CLASSES {
     ItemValue = 'powerdnd-item-value',
     ActionClassPrefix = 'action-',
     Chosen = 'powerdnd-chosen',
+    WarningContainer = 'powerdnd-warning-container',
     Warning = 'powerdnd-warning',
     WarningIcon = 'powerdnd-warning-icon',
 }

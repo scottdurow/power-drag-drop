@@ -174,6 +174,7 @@ export class ItemRenderer {
         return context.parameters.items.columns.filter((c) => c.order !== -1);
     }
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity
     private updateContainerStyles(parameters: IInputs) {
         const mainContainer = this.mainContainer;
         const listContainer = this.listContainer;
@@ -203,7 +204,21 @@ export class ItemRenderer {
             mainContainer.style.borderRadius = parameters.BorderRadius.raw + 'px';
         }
         if (parameters.Scroll?.raw !== null) {
-            listContainer.style.overflow = parameters.Scroll?.raw ? 'auto' : 'hidden';
+            const direction = parameters.Direction?.raw;
+            const scroll = parameters.Scroll.raw === true;
+            const wrap = parameters.Wrap?.raw === true;
+            listContainer.style.overflowX =
+                scroll && (direction !== DirectionEnum.Vertical || wrap) ? 'auto' : 'hidden';
+            listContainer.style.overflowY =
+                scroll && (direction !== DirectionEnum.Horizontal || wrap) ? 'auto' : 'hidden';
+        }
+
+        if (parameters.AccessibleLabel?.raw !== null) {
+            listContainer.ariaLabel = parameters.AccessibleLabel.raw;
+        }
+
+        if (parameters.AllowFocus?.raw !== null) {
+            listContainer.tabIndex = parameters.AllowFocus.raw ? 0 : -1;
         }
     }
 
@@ -297,8 +312,11 @@ export class ItemRenderer {
 
     private createMessageElement(messageHtml: string): HTMLElement {
         const element = document.createElement('div');
-        element.className = CSS_STYLE_CLASSES.Warning;
-        element.innerHTML = `<span class="${CSS_STYLE_CLASSES}"></span><span>${messageHtml}</span>`;
+        element.className = CSS_STYLE_CLASSES.WarningContainer;
+        element.innerHTML = `
+            <div class=${CSS_STYLE_CLASSES.Warning}>
+                <span class="${CSS_STYLE_CLASSES.WarningIcon}"></span><span>${messageHtml}</span>
+            </div>`;
         return element;
     }
 }

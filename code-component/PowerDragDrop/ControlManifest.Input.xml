@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.23" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
+  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.27" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
     <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.-->
     <external-service-usage enabled="false"></external-service-usage>
     <property name="DropZoneID" description-key="DropZoneID_Desc" display-name-key="DropZoneID" required="true" usage="input" of-type="SingleLine.Text"/>
@@ -44,6 +44,8 @@
     </property>
     <property name="Wrap" description-key="Wrap_Desc" display-name-key="Wrap" required="false" usage="bound" of-type="TwoOptions" default-value="false"/>
     <property name="Scroll" description-key="Scroll_Desc" display-name-key="Scroll" required="true" usage="bound" of-type="TwoOptions" default-value="true"/>
+    <property name="AccessibleLabel" description-key="AccessibleLabel_Desc" display-name-key="AccessibleLabel" usage="bound" of-type="SingleLine.Text" />
+    <property name="AllowFocus" description-key="AllowFocus_Desc" display-name-key="AllowFocus" usage="bound" of-type="TwoOptions" />
     <property name="DelaySelect" description-key="DelaySelect_Desc" display-name-key="DelaySelect" of-type="Enum" usage="bound" required="false" default-value="0">
       <value name="No" display-name-key="No">0</value>
       <value name="Yes" display-name-key="Yes">1</value>

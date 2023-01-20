@@ -33,6 +33,8 @@ export enum ManifestConstants {
     ItemGap = 'ItemGap',
     Direction = 'Direction',
     Wrap = 'Wrap',
+    AccessibleLabel = 'AccessibleLabel',
+    AllowFocus = 'AllowFocus',
 }
 
 export enum InputEvents {
@@ -64,12 +66,16 @@ export const RENDER_TRIGGER_PROPERTIES: string[] = [
     ManifestConstants.Scroll,
     ManifestConstants.Direction,
     ManifestConstants.Wrap,
+    ManifestConstants.AccessibleLabel,
+    ManifestConstants.AllowFocus,
+    ManifestConstants.DelaySelect,
 ];
 
 export const ZONE_REGISTRATION_PROPERTIES: string[] = [
     ManifestConstants.IsMasterZone,
     ManifestConstants.DropZoneID,
     ManifestConstants.OtherDropZoneIDs,
+    ManifestConstants.DelaySelect,
 ];
 
 export const ZONE_OPTIONS_PROPERTIES: string[] = [

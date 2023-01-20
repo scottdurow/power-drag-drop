@@ -1,5 +1,6 @@
 .powerdnd-main-container {
   border-style: solid;
+  border-color: transparent;
   box-sizing: border-box;
 }
 
@@ -55,6 +56,13 @@ li.powerdnd-item {
 
 .powerdnd-drag-rotate-anticlockwise-large {
   transform: rotate(-15deg);
+}
+
+.powerdnd-warning-container {
+  border-color: rgb(0,0,0,0.8);
+  border-width: 2px;
+  border-style: solid;
+  height: 100%;
 }
 
 .powerdnd-warning {

@@ -21,7 +21,8 @@ describe('ItemRenderer', () => {
               <ul
                 class="powerdnd-list"
                 data-render-version="1"
-                style="overflow: hidden;"
+                style="overflow-x: hidden; overflow-y: hidden;"
+                tabindex="-1"
               />
             </div>
         `);
@@ -44,7 +45,8 @@ describe('ItemRenderer', () => {
               <ul
                 class="powerdnd-list"
                 data-render-version="1"
-                style="overflow: hidden; flex-direction: row; flex-wrap: nowrap; display: flex;"
+                style="overflow-x: hidden; overflow-y: hidden; flex-direction: row; flex-wrap: nowrap; display: flex;"
+                tabindex="-1"
               />
             </div>
         `);
@@ -62,7 +64,8 @@ describe('ItemRenderer', () => {
               <ul
                 class="powerdnd-list"
                 data-render-version="1"
-                style="overflow: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
+                style="overflow-x: hidden; overflow-y: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
+                tabindex="-1"
               />
             </div>
         `);
@@ -82,7 +85,8 @@ describe('ItemRenderer', () => {
               <ul
                 class="powerdnd-list"
                 data-render-version="1"
-                style="overflow: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
+                style="overflow-x: hidden; overflow-y: hidden; flex-direction: row; flex-wrap: wrap; display: flex;"
+                tabindex="-1"
               />
             </div>
         `);

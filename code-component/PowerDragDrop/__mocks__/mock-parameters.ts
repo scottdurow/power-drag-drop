@@ -62,5 +62,7 @@ export function getMockParameters(): IInputs {
         Trace: new MockTwoOptionsProperty(false),
         ItemSchema: new MockStringProperty(''),
         items: items,
+        AccessibleLabel: new MockStringProperty(''),
+        AllowFocus: new MockTwoOptionsProperty(false),
     };
 }
