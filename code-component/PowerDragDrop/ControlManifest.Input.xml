@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.27" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
+  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.29" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
     <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.-->
     <external-service-usage enabled="false"></external-service-usage>
     <property name="DropZoneID" description-key="DropZoneID_Desc" display-name-key="DropZoneID" required="true" usage="input" of-type="SingleLine.Text"/>
@@ -52,7 +52,7 @@
       <value name="TouchOnly" display-name-key="TouchOnly">2</value>
     </property>
     <property name="Trace" description-key="Trace_Desc" display-name-key="Trace" usage="input" of-type="TwoOptions"/>
-
+    
     <!-- OnDrop Output Properties -->
     <event name="OnDrop" display-name-key="OnDrop" description-key="OnDrop_Desc" />
     <property name="DroppedPosition" description-key="DroppedPosition_Desc" display-name-key="DroppedPosition" usage="output" of-type="Whole.None"/>

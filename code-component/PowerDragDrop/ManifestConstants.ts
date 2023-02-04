@@ -40,6 +40,8 @@ export enum ManifestConstants {
 export enum InputEvents {
     Reset = 'Reset',
     ClearChanges = 'ClearChanges',
+    SetFocus = 'SetFocus',
+    FocusItem = 'FocusItem',
 }
 
 export const RENDER_TRIGGER_PROPERTIES: string[] = [

@@ -148,3 +148,18 @@ If you then add a label with the Text set to : `$"{PowerDragDrop1.ActionName} {P
 > **Note**: The clickable elements do not need to be buttons, they could be clickable links or `div` elements.
 
 Each time an action is selected, the `OnAction` event is raised.
+
+## Focus Control
+
+If you want to programmatically set focus on the control you can use the following to update the context variable that is bound to the `Input Event` property:
+```
+UpdateContext({ctxDragDropInputEvent:"SetFocus" & Text(Rand())})
+```
+
+If you need to set focus on a specific item you can use:
+
+```
+UpdateContext({ctxDragDropInputEvent:"FocusItem,SOME_ITEM_ID," & Text(Rand())})
+```
+
+Where you replace `SOME_ITEM_ID` with the Id that is provided in the column designated by the `IdColumn`.

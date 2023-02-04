@@ -2,6 +2,7 @@ import debounce from 'debounce';
 import Sortable, { SortableEvent } from 'sortablejs';
 import { ContextExtended } from './ContextExtended';
 import { CurrentItem, CurrentItemsSchema } from './CurrentItemSchema';
+import { findFirstFocusableElement } from './FocusControl';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
 import { ItemRenderer } from './ItemRenderer';
 import {
@@ -98,7 +99,6 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         // Determine what has changed
         const datasetChanged = this.hasPropertyChanged([ManifestConstants.dataset]);
         const resetDatasetTriggered = this.isEventRaised(InputEvents.Reset);
-        const clearChangesTriggered = this.isEventRaised(InputEvents.ClearChanges);
         const zonesChanged = this.hasPropertyChanged(ZONE_REGISTRATION_PROPERTIES);
         const layoutChanged = this.hasPropertyChanged(['layout']);
         if (!this.itemRenderer.rendered || this.hasPropertyChanged([ManifestConstants.DropZoneID])) {
@@ -139,11 +139,40 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             this.renderItems();
         }
 
-        if (clearChangesTriggered) {
+        if (this.isEventRaised(InputEvents.ClearChanges)) {
             this.clearCurrentItemChanges();
         }
 
+        this.handleFocusEvents();
         this.raiseEvents();
+    }
+
+    private handleFocusEvents() {
+        if (this.isEventRaised(InputEvents.SetFocus)) {
+            // Set focus on the whole control if possible (for a11y)
+            const firstFocusableElement = findFirstFocusableElement(this.itemRenderer.listContainer, true);
+            if (firstFocusableElement) firstFocusableElement.focus();
+        } else if (this.isEventRaised(InputEvents.FocusItem)) {
+            // Set focus on a specific drag item action if possible (For a11y)
+            // Expect the Focus Item to be followed by the item id and then random element - comma separated
+            const parts = this.context.parameters.InputEvent.raw?.split(',');
+            if (parts && parts.length > 0) {
+                const itemId = parts[1];
+                this.setFocusOnItem(itemId);
+            }
+        }
+    }
+
+    private setFocusOnItem(itemId: string) {
+        try {
+            const item = this.itemRenderer.listContainer.querySelector(`li[data-id='${itemId}']`) as HTMLElement;
+            if (item) {
+                const firstFocusableElement = findFirstFocusableElement(item, true);
+                if (firstFocusableElement) firstFocusableElement.focus();
+            }
+        } catch {
+            //no op
+        }
     }
 
     public async getOutputSchema(): Promise<Record<string, unknown>> {
