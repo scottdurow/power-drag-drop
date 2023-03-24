@@ -20,7 +20,7 @@
     "@types/json-schema": "^7.0.11",
     "@types/node": "^10.12.18",
     "@types/powerapps-component-framework": "^1.2.0",
-    "@types/sanitize-html": "^2.6.2",
+    "@types/sanitize-html": "^2.8.1",
     "@types/sortablejs": "^1.15.0",
     "debounce": "^1.2.1",
     "dom-autoscroller": "^2.3.4",
