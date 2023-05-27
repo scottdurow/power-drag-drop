@@ -104,6 +104,11 @@ export enum DirectionEnum {
     Horizontal = '2',
 }
 
+export enum SortDirection {
+    Ascending = '0',
+    Descending = '1',
+}
+
 export enum SortPositionType {
     Index = '0',
     Custom = '1',

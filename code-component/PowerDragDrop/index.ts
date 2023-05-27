@@ -11,6 +11,7 @@ import {
     ManifestConstants,
     OutputEvents,
     RENDER_TRIGGER_PROPERTIES,
+    SortDirection,
     SortPositionType,
     ZONE_OPTIONS_PROPERTIES,
     ZONE_REGISTRATION_PROPERTIES,
@@ -19,8 +20,6 @@ import {
     CSS_STYLE_CLASSES,
     DRAGGED_FROM_ZONE_ATTRIBUTE,
     DRAG_INVALID,
-    ORIGINAL_POSITION_ATTRIBUTE,
-    ORIGINAL_SORT_ORDER_ATTRIBUTE,
     ORIGINAL_ZONE_ATTRIBUTE,
     RECORD_ID_ATTRIBUTE,
     RENDER_VERSION_ATTRIBUTE,
@@ -311,18 +310,13 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                 const itemElement = sortable[1].sortable.el.children.item(i);
 
                 if (itemElement) {
-                    const itemId = itemElement?.getAttribute(RECORD_ID_ATTRIBUTE) as string;
-                    const originalZone = itemElement?.getAttribute(ORIGINAL_ZONE_ATTRIBUTE) as string;
-                    const originalSortPositionAttributeValue = itemElement?.getAttribute(ORIGINAL_SORT_ORDER_ATTRIBUTE);
-                    const originalSortPosition = originalSortPositionAttributeValue
-                        ? parseFloat(originalSortPositionAttributeValue as string)
-                        : undefined;
+                    const itemAttributes = this.itemRenderer.getRowAttributes(itemElement as HTMLElement);
 
                     reOrderableItems.push({
                         DropZoneId: sortable[0],
-                        ItemId: itemId,
-                        OriginalPosition: originalSortPosition,
-                        OriginalDropZoneId: originalZone,
+                        ItemId: itemAttributes.itemId,
+                        OriginalPosition: itemAttributes.originalSortPosition,
+                        OriginalDropZoneId: itemAttributes.originalZone,
                     });
                 }
             }
@@ -363,19 +357,23 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                 const itemElement = sortable[1].sortable.el.children.item(i);
 
                 if (itemElement) {
-                    const itemId = itemElement?.getAttribute(RECORD_ID_ATTRIBUTE) as string;
-                    const originalPosition = parseInt(itemElement?.getAttribute(ORIGINAL_POSITION_ATTRIBUTE) as string);
-                    const originalZone = itemElement?.getAttribute(ORIGINAL_ZONE_ATTRIBUTE) as string;
+                    const itemAttributes = this.itemRenderer.getRowAttributes(itemElement as HTMLElement);
+
                     // If the sort is being preserved, the position is based on all the items rather than just the items in the zone
-                    const position = this.context.parameters.PreserveSort.raw === true ? originalPosition : i + 1;
+                    const positionIndex =
+                        this.context.parameters.SortDirection?.raw === SortDirection.Ascending ? i + 1 : itemCount - i;
+                    const position =
+                        this.context.parameters.PreserveSort.raw === true
+                            ? itemAttributes.originalSortPosition
+                            : positionIndex;
                     this.currentItems.push({
                         DropZoneId: sortable[0],
-                        ItemId: itemId,
+                        ItemId: itemAttributes.itemId,
                         Position: position,
-                        OriginalPosition: originalPosition,
-                        OriginalDropZoneId: originalZone,
-                        HasMovedPosition: forceUpdate || originalPosition !== position,
-                        HasMovedZone: forceUpdate || originalZone !== sortable[0],
+                        OriginalPosition: itemAttributes.originalSortPosition,
+                        OriginalDropZoneId: itemAttributes.originalZone,
+                        HasMovedPosition: forceUpdate || itemAttributes.originalSortPosition !== position,
+                        HasMovedZone: forceUpdate || itemAttributes.originalZone !== sortable[0],
                     });
                 }
             }

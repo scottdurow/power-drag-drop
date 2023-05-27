@@ -3,7 +3,6 @@ import { escape } from 'html-escaper';
 import sanitize from 'sanitize-html';
 import { CurrentItem } from './CurrentItemSchema';
 import { GetOutputObjectRecord } from './DynamicSchema';
-import { IInputs } from './generated/ManifestTypes';
 import { DirectionEnum, ItemProperties, SortPositionType } from './ManifestConstants';
 import { SanitizeHtmlOptions } from './SanitizeHtmlOptions';
 import {
@@ -14,11 +13,21 @@ import {
     RECORD_ID_ATTRIBUTE,
     RENDER_VERSION_ATTRIBUTE,
 } from './Styles';
+import { IInputs } from './generated/ManifestTypes';
 
 export interface ItemSortStrategy {
     type: 'index' | 'customPosition';
     direction: 'asc' | 'desc';
 }
+
+export interface RowHTMLAttributes {
+    renderVersion?: number;
+    itemId: string;
+    originalZone: string;
+    originalSortPositionAttributeValue?: string;
+    originalSortPosition: number;
+}
+
 export class ItemRenderer {
     public rendered = false;
     public mainContainer: HTMLElement;
@@ -142,35 +151,33 @@ export class ItemRenderer {
             );
 
         let index = 0;
+        const totalItems = items.length;
         for (const itemInThisZone of items) {
             const item = itemInThisZone.record;
             index++;
             const itemRow: HTMLElement = document.createElement('li');
             itemRow.classList.add(CSS_STYLE_CLASSES.Item);
-            itemRow.setAttribute(RENDER_VERSION_ATTRIBUTE, this.renderVersion.toString());
+
+            // If the sort is being preserved, the position is based on all the items rather than just the items in the zone
+            const originalPositionIndex = sortStrategy.direction === 'asc' ? index : totalItems - index + 1;
+
+            const attributes = {
+                renderVersion: this.renderVersion,
+                // Set the index of the item in the source dataset - this is used when we drop an item
+                itemId: item.getValue(ItemProperties.IdColumn)
+                    ? item.getFormattedValue(ItemProperties.IdColumn)
+                    : index.toString(),
+                originalZone: parameters.DropZoneID.raw,
+                originalSortPosition:
+                    parameters.PreserveSort.raw === true ? itemInThisZone.index : originalPositionIndex,
+                originalcustomSortPosition:
+                    sortStrategy.type === 'customPosition' ? this.getCustomSortPosition(item) : undefined,
+            } as RowHTMLAttributes;
+
+            this.setRowAttributes(itemRow, attributes);
 
             // Style accordingly to the parameters
             this.styleItemElement(itemRow, parameters);
-
-            // Set the index of the item in the source dataset - this is used when we drop an item
-            const itemId = item.getValue(ItemProperties.IdColumn)
-                ? item.getFormattedValue(ItemProperties.IdColumn)
-                : index.toString();
-            itemRow.setAttribute(RECORD_ID_ATTRIBUTE, itemId);
-            // If the sort is being preserved, the position is based on all the items rather than just the items in the zone
-            itemRow.setAttribute(
-                ORIGINAL_POSITION_ATTRIBUTE,
-                (parameters.PreserveSort.raw === true ? itemInThisZone.index : index).toString(),
-            );
-
-            // If custom position is used set it
-            if (sortStrategy.type === 'customPosition') {
-                const customSortPositionValue = this.getCustomSortPosition(item);
-                if (customSortPositionValue)
-                    itemRow.setAttribute(ORIGINAL_SORT_POSITION_ATTRIBUTE, customSortPositionValue.toString());
-            }
-
-            itemRow.setAttribute(ORIGINAL_ZONE_ATTRIBUTE, parameters.DropZoneID.raw as string);
 
             if (renderTemplate) {
                 // Render mustache template
@@ -186,6 +193,33 @@ export class ItemRenderer {
         }
 
         return { itemsRendered: currentItems, sortOrder: originalOrder };
+    }
+
+    private setRowAttributes(itemRow: HTMLElement, attributes: RowHTMLAttributes) {
+        if (attributes.renderVersion)
+            itemRow.setAttribute(RENDER_VERSION_ATTRIBUTE, attributes.renderVersion.toString());
+        itemRow.setAttribute(RECORD_ID_ATTRIBUTE, attributes.itemId);
+        if (attributes.originalZone) itemRow.setAttribute(ORIGINAL_ZONE_ATTRIBUTE, attributes.originalZone);
+        if (attributes.originalSortPositionAttributeValue)
+            itemRow.setAttribute(
+                ORIGINAL_SORT_POSITION_ATTRIBUTE,
+                attributes.originalSortPositionAttributeValue.toString(),
+            );
+        if (attributes.originalSortPosition)
+            itemRow.setAttribute(ORIGINAL_POSITION_ATTRIBUTE, attributes.originalSortPosition.toString());
+    }
+
+    public getRowAttributes(itemRow: HTMLElement): RowHTMLAttributes {
+        const originalSortPosition = itemRow.getAttribute(ORIGINAL_POSITION_ATTRIBUTE);
+        const originalSortPositionAttributeValue = itemRow.getAttribute(ORIGINAL_SORT_POSITION_ATTRIBUTE);
+        return {
+            itemId: itemRow.getAttribute(RECORD_ID_ATTRIBUTE) ?? '',
+            originalZone: itemRow.getAttribute(ORIGINAL_ZONE_ATTRIBUTE) ?? '',
+            originalSortPosition: originalSortPosition ? parseInt(originalSortPosition) : 0,
+            originalSortPositionAttributeValue: originalSortPositionAttributeValue
+                ? parseFloat(originalSortPositionAttributeValue)
+                : undefined,
+        } as RowHTMLAttributes;
     }
 
     private getCustomSortPosition(item: ComponentFramework.PropertyHelper.DataSetApi.EntityRecord) {
@@ -334,7 +368,7 @@ export class ItemRenderer {
         fieldsOnDataset.forEach(function (columnItem) {
             const innerDiv = document.createElement('div');
             innerDiv.classList.add(CSS_STYLE_CLASSES.ItemValue);
-            innerDiv.innerText = item.getFormattedValue(columnItem.name);
+            innerDiv.textContent = item.getFormattedValue(columnItem.name);
             itemRow.appendChild(innerDiv);
         });
     }

@@ -1,8 +1,9 @@
 import { IInputs } from '../generated/ManifestTypes';
 import { ItemRenderer } from '../ItemRenderer';
-import { DirectionEnum } from '../ManifestConstants';
+import { DirectionEnum, ItemProperties, SortDirection } from '../ManifestConstants';
 import { MockContext } from '../__mocks__/mock-context';
 import { getMockParameters } from '../__mocks__/mock-parameters';
+import { MockEntityRecord } from '../__mocks__/mock-datasets';
 
 describe('ItemRenderer', () => {
     it('renders with aliases set', () => {
@@ -91,12 +92,158 @@ describe('ItemRenderer', () => {
             </div>
         `);
     });
+
+    it('adds index attributes - ascending', () => {
+        const parameters = getParametersWithItems();
+        const result = render(parameters);
+        expect(result).toBeDefined();
+        // Expect flex-wrap: wrap; to be added
+        expect(result.renderer.mainContainer).toMatchInlineSnapshot(`
+            <div
+              class="powerdnd-main-container"
+              style="overflow: hidden; padding: 0px 0px 0px 0px; border-width: 0px; border-radius: 0px;"
+            >
+              <ul
+                class="powerdnd-list"
+                data-render-version="1"
+                style="overflow-x: hidden; overflow-y: hidden;"
+                tabindex="-1"
+              >
+                <li
+                  class="powerdnd-item powerdnd-item-simple"
+                  data-id="Item 1"
+                  data-original-position="1"
+                  data-original-zone="Zone 1"
+                  data-render-version="1"
+                >
+                  <div
+                    class="powerdnd-item-value"
+                  >
+                    Item 1
+                  </div>
+                  <div
+                    class="powerdnd-item-value"
+                  >
+                    Zone 1
+                  </div>
+                </li>
+                <li
+                  class="powerdnd-item powerdnd-item-simple"
+                  data-id="Item 1"
+                  data-original-position="2"
+                  data-original-zone="Zone 1"
+                  data-render-version="1"
+                >
+                  <div
+                    class="powerdnd-item-value"
+                  >
+                    Item 1
+                  </div>
+                  <div
+                    class="powerdnd-item-value"
+                  >
+                    Zone 1
+                  </div>
+                </li>
+              </ul>
+            </div>
+        `);
+    });
+
+    it('adds index attributes - descending', () => {
+        const parameters = getParametersWithItems();
+        parameters.SortDirection.raw = SortDirection.Descending;
+        const result = render(parameters);
+        expect(result).toBeDefined();
+        // Expect flex-wrap: wrap; to be added
+        expect(result.renderer.mainContainer).toMatchInlineSnapshot(`
+          <div
+            class="powerdnd-main-container"
+            style="overflow: hidden; padding: 0px 0px 0px 0px; border-width: 0px; border-radius: 0px;"
+          >
+            <ul
+              class="powerdnd-list"
+              data-render-version="1"
+              style="overflow-x: hidden; overflow-y: hidden;"
+              tabindex="-1"
+            >
+              <li
+                class="powerdnd-item powerdnd-item-simple"
+                data-id="Item 1"
+                data-original-position="2"
+                data-original-zone="Zone 1"
+                data-render-version="1"
+              >
+                <div
+                  class="powerdnd-item-value"
+                >
+                  Item 1
+                </div>
+                <div
+                  class="powerdnd-item-value"
+                >
+                  Zone 1
+                </div>
+              </li>
+              <li
+                class="powerdnd-item powerdnd-item-simple"
+                data-id="Item 1"
+                data-original-position="1"
+                data-original-zone="Zone 1"
+                data-render-version="1"
+              >
+                <div
+                  class="powerdnd-item-value"
+                >
+                  Item 1
+                </div>
+                <div
+                  class="powerdnd-item-value"
+                >
+                  Zone 1
+                </div>
+              </li>
+            </ul>
+          </div>
+      `);
+    });
 });
+
+function getParametersWithItems() {
+    const parameters = getMockParameters();
+    parameters.items.columns.push({
+        alias: ItemProperties.ZoneColumn,
+        name: 'IdColumn',
+        displayName: '',
+        order: 1,
+        visualSizeFactor: 0,
+        dataType: 'string',
+    });
+    parameters.items.columns.push({
+        alias: ItemProperties.ZoneColumn,
+        name: 'ZoneColumn',
+        displayName: '',
+        order: 2,
+        visualSizeFactor: 0,
+        dataType: 'string',
+    });
+    parameters.items.records = {
+        1: new MockEntityRecord('1', { IdColumn: 'Item 1', ZoneColumn: 'Zone 1' }),
+        2: new MockEntityRecord('2', { IdColumn: 'Item 1', ZoneColumn: 'Zone 1' }),
+    };
+    parameters.items.sortedRecordIds = ['1', '2'];
+    parameters.DropZoneID.raw = 'Zone 1';
+    parameters.SortDirection.raw = SortDirection.Ascending;
+    return parameters;
+}
 
 function render(parameters: IInputs) {
     const container = document.createElement('div');
     const renderer = new ItemRenderer(container);
     const context = new MockContext(parameters);
-    const result = renderer.renderItems(context, { type: 'index', direction: 'asc' });
+    const result = renderer.renderItems(context, {
+        type: 'index',
+        direction: parameters.SortDirection.raw === SortDirection.Ascending ? 'asc' : 'desc',
+    });
     return { result, renderer };
 }
