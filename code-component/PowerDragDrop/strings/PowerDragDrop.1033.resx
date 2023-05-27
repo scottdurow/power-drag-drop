@@ -291,6 +291,42 @@
   <data name="DelaySelect" xml:space="preserve">
     <value>Delay Select</value>
   </data>
+  <data name="SortPositionType_Desc" xml:space="preserve">
+    <value>Use the internal index, or an external custom sort position specified by the CustomSortColumn attribute</value>
+  </data>
+  <data name="SortPositionType" xml:space="preserve">
+    <value>Sort Position Type</value>
+  </data>
+  <data name="SortDirection_Desc" xml:space="preserve">
+    <value>The sort direciton of the item position. This currently only is used for custom sort position columns.</value>
+  </data>
+  <data name="SortDirection" xml:space="preserve">
+    <value>Sort Direction</value>
+  </data>
+  <data name="CustomSortIncrement_Desc" xml:space="preserve">
+    <value>The amount by which the sort position is incremented by when using a custom sort column.</value>
+  </data>
+  <data name="CustomSortIncrement" xml:space="preserve">
+    <value>Custom Sort: Increment</value>
+  </data>
+  <data name="CustomSortMinIncrement_Desc" xml:space="preserve">
+    <value>If the difference between two sort positions is less than this value, then the items positions are adjusted.</value>
+  </data>
+  <data name="CustomSortMinIncrement" xml:space="preserve">
+    <value>Custom Sort: Min Increment</value>
+  </data>
+  <data name="CustomSortAllowNegative_Desc" xml:space="preserve">
+    <value>If items are pushed off below zero, then reduce the sort increment to accomodate. This can cause items to have the same sort position.</value>
+  </data>
+  <data name="CustomSortAllowNegative" xml:space="preserve">
+    <value>Custom Sort: Allow Negative</value>
+  </data>
+  <data name="CustomSortDecimalPlaces_Desc" xml:space="preserve">
+    <value>The maximum number of decimal places to use for fractional custom sort positions.</value>
+  </data>
+  <data name="CustomSortDecimalPlaces" xml:space="preserve">
+    <value>Custom Sort: Decimal Places</value>
+  </data>
   <data name="Direction" xml:space="preserve">
     <value>Direction</value>
   </data>

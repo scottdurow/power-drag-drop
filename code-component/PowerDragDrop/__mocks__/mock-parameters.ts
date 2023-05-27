@@ -64,5 +64,11 @@ export function getMockParameters(): IInputs {
         items: items,
         AccessibleLabel: new MockStringProperty(''),
         AllowFocus: new MockTwoOptionsProperty(false),
+        CustomSortIncrement: new MockWholeNumberProperty(100),
+        SortDirection: new MockEnumProperty<'0' | '1'>('0'),
+        CustomSortAllowNegative: new MockTwoOptionsProperty(false),
+        CustomSortDecimalPlaces: new MockWholeNumberProperty(0),
+        CustomSortMinIncrement: new MockWholeNumberProperty(10),
+        SortPositionType: new MockEnumProperty<'0' | '1'>('0'),
     };
 }

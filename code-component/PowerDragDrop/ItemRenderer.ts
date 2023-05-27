@@ -4,16 +4,21 @@ import sanitize from 'sanitize-html';
 import { CurrentItem } from './CurrentItemSchema';
 import { GetOutputObjectRecord } from './DynamicSchema';
 import { IInputs } from './generated/ManifestTypes';
-import { DirectionEnum, ItemProperties } from './ManifestConstants';
+import { DirectionEnum, ItemProperties, SortPositionType } from './ManifestConstants';
 import { SanitizeHtmlOptions } from './SanitizeHtmlOptions';
 import {
     CSS_STYLE_CLASSES,
     ORIGINAL_POSITION_ATTRIBUTE,
+    ORIGINAL_SORT_ORDER_ATTRIBUTE as ORIGINAL_SORT_POSITION_ATTRIBUTE,
     ORIGINAL_ZONE_ATTRIBUTE,
     RECORD_ID_ATTRIBUTE,
     RENDER_VERSION_ATTRIBUTE,
 } from './Styles';
 
+export interface ItemSortStrategy {
+    type: 'index' | 'customPosition';
+    direction: 'asc' | 'desc';
+}
 export class ItemRenderer {
     public rendered = false;
     public mainContainer: HTMLElement;
@@ -41,12 +46,25 @@ export class ItemRenderer {
 
     private checkForAliases(context: ComponentFramework.Context<IInputs>) {
         // If there is no Id or Zone column defined, then report a message to the maker
-        if (
-            !context.parameters.items.columns.find((c) => c.alias === ItemProperties.IdColumn && c.name !== null) ||
-            !context.parameters.items.columns.find((c) => c.alias === ItemProperties.ZoneColumn && c.name !== null)
-        ) {
+        const idColumnSet = context.parameters.items.columns.find(
+            (c) => c.alias === ItemProperties.IdColumn && c.name !== null,
+        );
+        const zoneColumnSet = context.parameters.items.columns.find(
+            (c) => c.alias === ItemProperties.ZoneColumn && c.name !== null,
+        );
+
+        const customSortPositionRequired = context.parameters.SortPositionType?.raw === SortPositionType.Custom;
+
+        // CustomPositionColumn is only required if the sort type is CustomPosition
+        const customPositionColumnSet = context.parameters.items.columns.find(
+            (c) => c.alias === ItemProperties.CustomPositionColumn && c.name !== null,
+        );
+
+        if (!idColumnSet || !zoneColumnSet || (customSortPositionRequired && !customPositionColumnSet)) {
             this.renderMessage(
-                'Please set both <strong>IdColumn</strong> and <strong>ZoneColumn</strong> column aliases in the <strong>Advanced Properties</strong> panel.',
+                `Please set both <strong>IdColumn</strong>${
+                    customSortPositionRequired ? ',<strong>CustomPositionColumn</strong>' : ''
+                } and <strong>ZoneColumn</strong> column aliases in the <strong>Advanced Properties</strong> panel.`,
             );
             return false;
         }
@@ -56,6 +74,7 @@ export class ItemRenderer {
     // eslint-disable-next-line sonarjs/cognitive-complexity
     public renderItems(
         context: ComponentFramework.Context<IInputs>,
+        sortStrategy: ItemSortStrategy,
     ): { itemsRendered?: CurrentItem[]; sortOrder?: string[] } {
         const parameters = context.parameters;
         const dataset = context.parameters.items;
@@ -88,7 +107,10 @@ export class ItemRenderer {
                     zoneCounts[zone] = zoneCounts[zone] + 1;
                 }
                 // If the sort is being preserved, the position is based on all the items rather than just the items in the zone
-                const positionInZone = parameters.PreserveSort.raw === true ? index + 1 : zoneCounts[zone];
+                const indexInZone = parameters.PreserveSort.raw === true ? index + 1 : zoneCounts[zone];
+                const positionInZone =
+                    sortStrategy.type === 'customPosition' ? this.getCustomSortPosition(record) : indexInZone;
+
                 const item: CurrentItem = {
                     DropZoneId: zone,
                     ItemId: itemId,
@@ -140,6 +162,14 @@ export class ItemRenderer {
                 ORIGINAL_POSITION_ATTRIBUTE,
                 (parameters.PreserveSort.raw === true ? itemInThisZone.index : index).toString(),
             );
+
+            // If custom position is used set it
+            if (sortStrategy.type === 'customPosition') {
+                const customSortPositionValue = this.getCustomSortPosition(item);
+                if (customSortPositionValue)
+                    itemRow.setAttribute(ORIGINAL_SORT_POSITION_ATTRIBUTE, customSortPositionValue.toString());
+            }
+
             itemRow.setAttribute(ORIGINAL_ZONE_ATTRIBUTE, parameters.DropZoneID.raw as string);
 
             if (renderTemplate) {
@@ -156,6 +186,10 @@ export class ItemRenderer {
         }
 
         return { itemsRendered: currentItems, sortOrder: originalOrder };
+    }
+
+    private getCustomSortPosition(item: ComponentFramework.PropertyHelper.DataSetApi.EntityRecord) {
+        return (item.getValue('position') as number) ?? undefined;
     }
 
     private removeAllExistingElements() {

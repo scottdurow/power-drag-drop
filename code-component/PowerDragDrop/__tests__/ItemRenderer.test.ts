@@ -97,6 +97,6 @@ function render(parameters: IInputs) {
     const container = document.createElement('div');
     const renderer = new ItemRenderer(container);
     const context = new MockContext(parameters);
-    const result = renderer.renderItems(context);
+    const result = renderer.renderItems(context, { type: 'index', direction: 'asc' });
     return { result, renderer };
 }

@@ -1,6 +1,7 @@
 export enum ItemProperties {
     IdColumn = 'IdColumn',
     ZoneColumn = 'ZoneColumn',
+    CustomPositionColumn = 'CustomPositionColumn',
 }
 
 export enum ManifestConstants {
@@ -35,6 +36,7 @@ export enum ManifestConstants {
     Wrap = 'Wrap',
     AccessibleLabel = 'AccessibleLabel',
     AllowFocus = 'AllowFocus',
+    SortPositionType = 'SortPositionType',
 }
 
 export enum InputEvents {
@@ -42,6 +44,13 @@ export enum InputEvents {
     ClearChanges = 'ClearChanges',
     SetFocus = 'SetFocus',
     FocusItem = 'FocusItem',
+    SyncPositions = 'SyncPositions',
+}
+
+export enum OutputEvents {
+    OnDrop = 'OnDrop',
+    OnAction = 'OnAction',
+    OnDropAfterSyncPositions = 'OnDropAfterSyncPositions',
 }
 
 export const RENDER_TRIGGER_PROPERTIES: string[] = [
@@ -71,6 +80,7 @@ export const RENDER_TRIGGER_PROPERTIES: string[] = [
     ManifestConstants.AccessibleLabel,
     ManifestConstants.AllowFocus,
     ManifestConstants.DelaySelect,
+    ManifestConstants.SortPositionType,
 ];
 
 export const ZONE_REGISTRATION_PROPERTIES: string[] = [
@@ -92,4 +102,9 @@ export enum DirectionEnum {
     Auto = '0',
     Vertical = '1',
     Horizontal = '2',
+}
+
+export enum SortPositionType {
+    Index = '0',
+    Custom = '1',
 }

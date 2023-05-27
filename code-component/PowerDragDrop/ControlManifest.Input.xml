@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.29" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
+  <control namespace="CustomControl" constructor="PowerDragDrop" version="1.0.32" display-name-key="PowerDragDrop" description-key="PowerDragDrop_Desc" control-type="standard">
     <!--external-service-usage node declares whether this 3rd party PCF control is using external service or not, if yes, this control will be considered as premium and please also add the external domain it is using.-->
     <external-service-usage enabled="false"></external-service-usage>
     <property name="DropZoneID" description-key="DropZoneID_Desc" display-name-key="DropZoneID" required="true" usage="input" of-type="SingleLine.Text"/>
@@ -51,6 +51,21 @@
       <value name="Yes" display-name-key="Yes">1</value>
       <value name="TouchOnly" display-name-key="TouchOnly">2</value>
     </property>
+
+    <property name="SortDirection" description-key="SortDirection_Desc" display-name-key="SortDirection" of-type="Enum" usage="bound" required="false" default-value="0">
+      <value name="Ascending" display-name-key="Ascending">0</value>
+      <value name="Descending" display-name-key="Descending">1</value>
+    </property>
+
+    <property name="SortPositionType" description-key="SortPositionType_Desc" display-name-key="SortPositionType" of-type="Enum" usage="bound" required="false" default-value="0">
+      <value name="Index" display-name-key="Index">0</value>
+      <value name="Custom" display-name-key="Custom">1</value>
+    </property>
+    
+    <property name="CustomSortIncrement" description-key="CustomSortIncrement_Desc" display-name-key="CustomSortIncrement"  of-type="Whole.None" usage="bound" default-value="1000" />
+    <property name="CustomSortMinIncrement" description-key="CustomSortMinIncrement" display-name-key="CustomSortMinIncrement"  of-type="Whole.None" usage="bound" default-value="10" />
+    <property name="CustomSortDecimalPlaces" description-key="CustomSortDecimalPlaces_Desc" display-name-key="CustomSortDecimalPlaces"  of-type="Whole.None" usage="bound" default-value="4" />
+    <property name="CustomSortAllowNegative" description-key="CustomSortAllowNegative_Desc" display-name-key="CustomSortAllowNegative" required="false" usage="bound" of-type="TwoOptions" default-value="true"/>
     <property name="Trace" description-key="Trace_Desc" display-name-key="Trace" usage="input" of-type="TwoOptions"/>
     
     <!-- OnDrop Output Properties -->
@@ -75,6 +90,7 @@
     <data-set name="items" description-key="items_Desc" display-name-key="items">
        <property-set name="IdColumn" display-name-key="IdColumn" of-type="SingleLine.Text" usage="bound" required="false" />
        <property-set name="ZoneColumn" display-name-key="ZoneColumn" of-type="SingleLine.Text" usage="bound" required="false" />
+       <property-set name="CustomPositionColumn" display-name-key="CustomPositionColumn" of-type="Decimal" usage="bound" required="false" />
     </data-set>
 
     <property-dependencies>

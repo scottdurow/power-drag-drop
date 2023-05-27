@@ -5,5 +5,7 @@
         "sonarjs",
         "sortablejs",
         "Unchoose"
-    ]
+    ],
+    "jest.coverageFormatter": "DefaultFormatter",
+    "jest.showCoverageOnLoad": false
 }
