@@ -3,7 +3,7 @@ import { escape } from 'html-escaper';
 import sanitize from 'sanitize-html';
 import { CurrentItem } from './CurrentItemSchema';
 import { GetOutputObjectRecord } from './DynamicSchema';
-import { DirectionEnum, ItemProperties, SortPositionType } from './ManifestConstants';
+import { DirectionEnum, ItemProperties, ManifestConstants, SortPositionType } from './ManifestConstants';
 import { SanitizeHtmlOptions } from './SanitizeHtmlOptions';
 import {
     CSS_STYLE_CLASSES,
@@ -223,7 +223,7 @@ export class ItemRenderer {
     }
 
     private getCustomSortPosition(item: ComponentFramework.PropertyHelper.DataSetApi.EntityRecord) {
-        return (item.getValue('position') as number) ?? undefined;
+        return (item.getValue(ItemProperties.CustomPositionColumn) as number) ?? undefined;
     }
 
     private removeAllExistingElements() {
