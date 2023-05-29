@@ -1,7 +1,14 @@
-import { updateSortPosition } from '../CustomSortPositionStrategy';
+import { CustomSortPositionStrategy } from '../CustomSortPositionStrategy';
 import { createReOrderableItems, insertNewItem, moveItemsSameZone } from '../_testhelpers_/SortOrderTestHelper';
 
 describe('Custom Sort Position Descending', () => {
+    let strategy: CustomSortPositionStrategy;
+
+    beforeEach(() => {
+        strategy = new CustomSortPositionStrategy();
+        strategy.SetOptions({ sortOrder: 'desc' });
+    });
+
     it('desc - add items to end of list', () => {
         const items = createReOrderableItems(5, { sort: 'desc' });
         insertNewItem(items, '1', items.length);
@@ -12,7 +19,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[3].OriginalPosition).toBe(200);
         expect(items[4].OriginalPosition).toBe(100);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(7);
         expect(result[0].Position).toBe(500);
@@ -22,6 +29,28 @@ describe('Custom Sort Position Descending', () => {
         expect(result[4].Position).toBe(100);
         expect(result[5].Position).toBe(66.6667);
         expect(result[6].Position).toBe(33.3333);
+    });
+
+    it('desc - add item to end of list - same value', () => {
+        const items = createReOrderableItems(5, { sort: 'desc' });
+        insertNewItem(items, '1', items.length, 100);
+
+        expect(items[0].OriginalPosition).toBe(500);
+        expect(items[1].OriginalPosition).toBe(400);
+        expect(items[2].OriginalPosition).toBe(300);
+        expect(items[3].OriginalPosition).toBe(200);
+        expect(items[4].OriginalPosition).toBe(100);
+        expect(items[5].OriginalPosition).toBe(100); // new item
+
+        const result = strategy.updateSortPosition(items);
+        expect(result).toBeDefined();
+        expect(result).toHaveLength(6);
+        expect(result[0].Position).toBe(500);
+        expect(result[1].Position).toBe(400);
+        expect(result[2].Position).toBe(300);
+        expect(result[3].Position).toBe(200);
+        expect(result[4].Position).toBe(150); // updated
+        expect(result[5].Position).toBe(100);
     });
 
     it('desc - add items to top of list', () => {
@@ -37,11 +66,11 @@ describe('Custom Sort Position Descending', () => {
         expect(items[5].OriginalPosition).toBe(200);
         expect(items[6].OriginalPosition).toBe(100);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(7);
-        expect(result[0].Position).toBe(700);
-        expect(result[1].Position).toBe(600);
+        expect(result[0].Position).toBe(700); // updated
+        expect(result[1].Position).toBe(600); // updated
         expect(result[2].Position).toBe(500);
         expect(result[3].Position).toBe(400);
         expect(result[4].Position).toBe(300);
@@ -52,10 +81,17 @@ describe('Custom Sort Position Descending', () => {
     it('desc - when item is added to top of the items, it is the only item updated', () => {
         const items = createReOrderableItems(5, { sort: 'desc' });
         insertNewItem(items, '1', 0);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        expect(items[0].OriginalPosition).toBe(undefined); // new item
+        expect(items[1].OriginalPosition).toBe(500);
+        expect(items[2].OriginalPosition).toBe(400);
+        expect(items[3].OriginalPosition).toBe(300);
+        expect(items[4].OriginalPosition).toBe(200);
+        expect(items[5].OriginalPosition).toBe(100);
+
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(6);
-        expect(result[0].Position).toBe(600);
+        expect(result[0].Position).toBe(600); // updated
         expect(result[1].Position).toBe(500);
         expect(result[2].Position).toBe(400);
         expect(result[3].Position).toBe(300);
@@ -66,7 +102,14 @@ describe('Custom Sort Position Descending', () => {
     it('desc - when item is moved to the end of the items, it is the only item updated', () => {
         const items = createReOrderableItems(5, { sort: 'desc' });
         insertNewItem(items, '1', items.length);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        expect(items[0].OriginalPosition).toBe(500);
+        expect(items[1].OriginalPosition).toBe(400);
+        expect(items[2].OriginalPosition).toBe(300);
+        expect(items[3].OriginalPosition).toBe(200);
+        expect(items[4].OriginalPosition).toBe(100);
+        expect(items[5].OriginalPosition).toBe(undefined); // new item
+
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(6);
         expect(result[0].Position).toBe(500);
@@ -74,7 +117,7 @@ describe('Custom Sort Position Descending', () => {
         expect(result[2].Position).toBe(300);
         expect(result[3].Position).toBe(200);
         expect(result[4].Position).toBe(100);
-        expect(result[5].Position).toBe(50);
+        expect(result[5].Position).toBe(50); // updated
     });
 
     it('desc - assigns the newposition correctly after swapping two items', () => {
@@ -83,9 +126,10 @@ describe('Custom Sort Position Descending', () => {
         expect(items[0].OriginalPosition).toBe(500);
         expect(items[1].OriginalPosition).toBe(300); // moved up
         expect(items[2].OriginalPosition).toBe(400);
+        // moved up from here
         expect(items[3].OriginalPosition).toBe(200);
         expect(items[4].OriginalPosition).toBe(100);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(500);
@@ -103,7 +147,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[2].OriginalPosition).toBe(400);
         expect(items[3].OriginalPosition).toBe(300);
         expect(items[4].OriginalPosition).toBe(200);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(600);
@@ -121,7 +165,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[2].OriginalPosition).toBe(300);
         expect(items[3].OriginalPosition).toBe(200);
         expect(items[4].OriginalPosition).toBe(100);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(600); // changed
@@ -139,7 +183,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[2].OriginalPosition).toBe(300);
         expect(items[3].OriginalPosition).toBe(100); //moved up
         expect(items[4].OriginalPosition).toBe(200);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(500);
@@ -157,7 +201,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[2].OriginalPosition).toBe(400);
         expect(items[3].OriginalPosition).toBe(300);
         expect(items[4].OriginalPosition).toBe(100);
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(500);
@@ -176,7 +220,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[3].OriginalPosition).toBe(undefined);
         expect(items[4].OriginalPosition).toBe(undefined);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(500);
@@ -192,7 +236,7 @@ describe('Custom Sort Position Descending', () => {
         items[3].OriginalPosition = undefined;
         items[4].OriginalPosition = undefined;
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(500);
@@ -208,7 +252,7 @@ describe('Custom Sort Position Descending', () => {
         insertNewItem(items, '1', 1);
         insertNewItem(items, '1', 2);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(300);
@@ -228,7 +272,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[3].OriginalPosition).toBe(50);
         expect(items[4].OriginalPosition).toBe(undefined);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(300);
@@ -249,7 +293,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[3].OriginalPosition).toBe(25);
         expect(items[4].OriginalPosition).toBe(undefined);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(5);
         expect(result[0].Position).toBe(200);
@@ -270,7 +314,7 @@ describe('Custom Sort Position Descending', () => {
         expect(items[2].OriginalPosition).toBe(0.5);
         expect(items[3].OriginalPosition).toBe(undefined);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(4);
         expect(result[0].Position).toBe(2);
@@ -286,7 +330,7 @@ describe('Custom Sort Position Descending', () => {
         insertNewItem(items, '1', items.length, 280);
         insertNewItem(items, '1', items.length, 260);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc' });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(4);
         expect(result[0].Position).toBe(300);
@@ -297,12 +341,13 @@ describe('Custom Sort Position Descending', () => {
 
     it('desc - move top below zero position - with no minimum increment of 100', () => {
         const items = createReOrderableItems(0, { sort: 'desc' });
+        strategy.SetOptions({ sortOrder: 'desc', minimumIncrement: 100 });
         insertNewItem(items, '1', items.length, 30);
         insertNewItem(items, '1', items.length, 40);
         insertNewItem(items, '1', items.length, 28);
         insertNewItem(items, '1', items.length, 27);
 
-        const result = updateSortPosition(items, { sortOrder: 'desc', minimumIncrement: 50 });
+        const result = strategy.updateSortPosition(items);
         expect(result).toBeDefined();
         expect(result).toHaveLength(4);
         expect(result[0].Position).toBe(140);

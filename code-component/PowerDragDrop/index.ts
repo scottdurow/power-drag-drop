@@ -25,7 +25,7 @@ import {
     RENDER_VERSION_ATTRIBUTE,
     ROTATION_CLASSES,
 } from './Styles';
-import { ReOrderableItem, updateSortPosition } from './CustomSortPositionStrategy';
+import { ReOrderableItem, CustomSortPositionStrategy } from './CustomSortPositionStrategy';
 
 // Because elements get created and destroyed (e.g. gallery), we must keep checking on a timer
 // because there is no way to receive messages from the controls as they are created/destroyed
@@ -75,6 +75,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
     private currentItemZone: string | null = null;
     private sortablesToDestroy: Sortable[] = [];
     private disposed: boolean;
+    private customSortStrategy = new CustomSortPositionStrategy();
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -315,18 +316,19 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                     reOrderableItems.push({
                         DropZoneId: sortable[0],
                         ItemId: itemAttributes.itemId,
-                        OriginalPosition: itemAttributes.originalSortPosition,
+                        OriginalPosition: itemAttributes.originalSortPositionAttributeValue,
                         OriginalDropZoneId: itemAttributes.originalZone,
                     });
                 }
             }
             // update the new sort position where items are out of sequence
-            updateSortPosition(reOrderableItems, {
+            this.customSortStrategy.SetOptions({
                 positionIncrement: this.context.parameters.CustomSortIncrement?.raw ?? 1000,
                 sortOrder: direction,
                 allowNegative: this.context.parameters.CustomSortAllowNegative?.raw ?? true,
                 minimumIncrement: this.context.parameters.CustomSortMinIncrement?.raw ?? 10,
             });
+            this.customSortStrategy.updateSortPosition(reOrderableItems);
 
             // Add the updated items to the currentItems output dataset
             reOrderableItems.forEach((item) => {

@@ -24,7 +24,7 @@ export interface RowHTMLAttributes {
     renderVersion?: number;
     itemId: string;
     originalZone: string;
-    originalSortPositionAttributeValue?: string;
+    originalSortPositionAttributeValue?: number;
     originalSortPosition: number;
 }
 
@@ -170,7 +170,7 @@ export class ItemRenderer {
                 originalZone: parameters.DropZoneID.raw,
                 originalSortPosition:
                     parameters.PreserveSort.raw === true ? itemInThisZone.index : originalPositionIndex,
-                originalcustomSortPosition:
+                originalSortPositionAttributeValue:
                     sortStrategy.type === 'customPosition' ? this.getCustomSortPosition(item) : undefined,
             } as RowHTMLAttributes;
 
