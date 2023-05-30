@@ -300,7 +300,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         */
 
         this.currentItems = [];
-
+        const preserveSort = this.context.parameters.PreserveSort.raw === true;
         // Get the items from each dropzone and work out the new custom sort position
         Object.entries(this.zonesRegistered).forEach((sortable) => {
             const children = sortable[1].sortable.el.children;
@@ -332,13 +332,15 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
 
             // Add the updated items to the currentItems output dataset
             reOrderableItems.forEach((item) => {
+                const position = preserveSort ? (item.OriginalPosition as number) : (item.Position as number);
+
                 this.currentItems.push({
                     DropZoneId: item.DropZoneId,
                     ItemId: item.ItemId,
-                    Position: item.Position as number,
+                    Position: position,
                     OriginalPosition: item.OriginalPosition as number,
                     OriginalDropZoneId: item.OriginalDropZoneId,
-                    HasMovedPosition: item.HasMovedPosition === true,
+                    HasMovedPosition: !preserveSort && item.HasMovedPosition === true,
                     HasMovedZone: item.HasMovedZone === true,
                 });
             });
