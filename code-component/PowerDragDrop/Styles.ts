@@ -1,5 +1,6 @@
 export const RECORD_ID_ATTRIBUTE = 'data-id';
 export const ORIGINAL_POSITION_ATTRIBUTE = 'data-original-position';
+export const ORIGINAL_SORT_ORDER_ATTRIBUTE = 'data-original-sort-position';
 export const ORIGINAL_ZONE_ATTRIBUTE = 'data-original-zone';
 export const DRAGGED_FROM_ZONE_ATTRIBUTE = 'data-dragged-from-zone';
 export const RENDER_VERSION_ATTRIBUTE = 'data-render-version';

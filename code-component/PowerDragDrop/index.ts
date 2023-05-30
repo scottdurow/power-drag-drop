@@ -4,11 +4,15 @@ import { ContextExtended } from './ContextExtended';
 import { CurrentItem, CurrentItemsSchema } from './CurrentItemSchema';
 import { findFirstFocusableElement } from './FocusControl';
 import { IInputs, IOutputs } from './generated/ManifestTypes';
-import { ItemRenderer } from './ItemRenderer';
+import { ItemRenderer, ItemSortStrategy } from './ItemRenderer';
 import {
     InputEvents,
+    ItemProperties,
     ManifestConstants,
+    OutputEvents,
     RENDER_TRIGGER_PROPERTIES,
+    SortDirection,
+    SortPositionType,
     ZONE_OPTIONS_PROPERTIES,
     ZONE_REGISTRATION_PROPERTIES,
 } from './ManifestConstants';
@@ -16,12 +20,12 @@ import {
     CSS_STYLE_CLASSES,
     DRAGGED_FROM_ZONE_ATTRIBUTE,
     DRAG_INVALID,
-    ORIGINAL_POSITION_ATTRIBUTE,
     ORIGINAL_ZONE_ATTRIBUTE,
     RECORD_ID_ATTRIBUTE,
     RENDER_VERSION_ATTRIBUTE,
     ROTATION_CLASSES,
 } from './Styles';
+import { ReOrderableItem, CustomSortPositionStrategy } from './CustomSortPositionStrategy';
 
 // Because elements get created and destroyed (e.g. gallery), we must keep checking on a timer
 // because there is no way to receive messages from the controls as they are created/destroyed
@@ -63,8 +67,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
     private droppedPosition? = -1;
     private currentItems: CurrentItem[];
     private originalOrder: string[];
-    private raiseOnDropScheduled: boolean;
-    private raiseOnActionScheduled: boolean;
+    private scheduledEvents: Partial<Record<OutputEvents, boolean>> = {};
     private actionName: string;
     private actionItemId: string;
     private itemRenderer: ItemRenderer;
@@ -72,6 +75,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
     private currentItemZone: string | null = null;
     private sortablesToDestroy: Sortable[] = [];
     private disposed: boolean;
+    private customSortStrategy = new CustomSortPositionStrategy();
 
     public init(
         context: ComponentFramework.Context<IInputs>,
@@ -91,7 +95,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
 
     // eslint-disable-next-line sonarjs/cognitive-complexity
     public updateView(context: ComponentFramework.Context<IInputs>): void {
-        this.trace('updateView', context.parameters.DropZoneID, context.updatedProperties);
+        this.trace(`updateView ${context.parameters.DropZoneID.raw}`, context.updatedProperties.join(' | '));
         this.context = context as ContextExtended<IInputs>;
         const parameters = context.parameters;
         const isMasterZone = this.isMasterZone();
@@ -101,6 +105,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         const resetDatasetTriggered = this.isEventRaised(InputEvents.Reset);
         const zonesChanged = this.hasPropertyChanged(ZONE_REGISTRATION_PROPERTIES);
         const layoutChanged = this.hasPropertyChanged(['layout']);
+        const syncPositionsTriggered = this.isEventRaised(InputEvents.SyncPositions);
         if (!this.itemRenderer.rendered || this.hasPropertyChanged([ManifestConstants.DropZoneID])) {
             this.setZoneId(this.itemRenderer.listContainer, parameters.DropZoneID.raw as string);
         }
@@ -128,23 +133,30 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             this.updateZoneProperties();
         }
 
-        // Event if this is not a master zone, the reset event triggers a re-render to enable items
+        this.raiseScheduledEvents([OutputEvents.OnDropAfterSyncPositions]);
+
+        // Even if this is not a master zone, the reset event triggers a re-render to enable items
         // to be re-created after drop
         const renderTriggerProperties = this.hasPropertyChanged(RENDER_TRIGGER_PROPERTIES);
         const updateItems =
-            !this.itemRenderer.rendered || resetDatasetTriggered || datasetChanged || renderTriggerProperties;
+            !this.itemRenderer.rendered ||
+            resetDatasetTriggered ||
+            datasetChanged ||
+            renderTriggerProperties ||
+            syncPositionsTriggered;
 
         if (!parameters.items.loading && updateItems) {
             this.trace('renderItems', { resetDatasetTriggered, datasetChanged, renderTriggerProperties });
-            this.renderItems();
+            this.renderItems(syncPositionsTriggered);
         }
 
         if (this.isEventRaised(InputEvents.ClearChanges)) {
+            this.trace('clearCurrentItemChanges');
             this.clearCurrentItemChanges();
         }
 
         this.handleFocusEvents();
-        this.raiseEvents();
+        this.raiseScheduledEvents([OutputEvents.OnDrop, OutputEvents.OnAction]);
     }
 
     private handleFocusEvents() {
@@ -182,7 +194,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
     }
 
     public getOutputs(): IOutputs {
-        return {
+        const outputs = {
             DroppedId: this.droppedId,
             DroppedTarget: this.droppedTarget,
             DroppedSource: this.droppedSource,
@@ -191,6 +203,8 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             ActionName: this.actionName,
             ActionItemId: this.actionItemId,
         };
+        this.trace('getOutputs', outputs);
+        return outputs;
     }
 
     public destroy(): void {
@@ -201,14 +215,21 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         }
     }
 
-    private renderItems(): void {
-        const renderResult = this.itemRenderer.renderItems(this.context);
+    private renderItems(syncPositions = false): void {
+        const renderResult = this.itemRenderer.renderItems(this.context, this.getSort());
+
         if (renderResult.itemsRendered && renderResult.sortOrder) {
             this.currentItems = renderResult.itemsRendered;
             this.originalOrder = renderResult.sortOrder;
 
+            if (syncPositions) {
+                // Now that the positions are forced update, we simulate the drop event
+                // so that they can be picked up in the pap
+                this.syncCurrentItems(true);
+                this.scheduleEvent(OutputEvents.OnDropAfterSyncPositions);
+            }
             if (this.isMasterZone()) {
-                this.notifyOutputChanged();
+                this.scheduleGetOutputs();
             }
         }
     }
@@ -224,6 +245,20 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         if (this.context.parameters.PreserveSort.raw === true) {
             this.zonesRegistered[targetZoneId].sortable.sort(this.originalOrder, true);
         }
+    }
+
+    private getSort(): ItemSortStrategy {
+        return {
+            // Use custom position strategy if the custom position column is set and type is 'custom'
+            type:
+                this.context.parameters.SortPositionType?.raw === SortPositionType.Custom &&
+                this.context.parameters.items.columns.find(
+                    (c) => c.alias === ItemProperties.CustomPositionColumn && c.name !== null,
+                )
+                    ? 'customPosition'
+                    : 'index',
+            direction: this.context.parameters.SortDirection?.raw === '1' ? 'desc' : 'asc',
+        };
     }
 
     private isMasterZone(): boolean {
@@ -242,7 +277,82 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         return document.getElementById(this.removeSpaces(zoneId)) as HTMLElement | null;
     }
 
-    private syncCurrentItems() {
+    private syncCurrentItems(forceUpdate = false) {
+        // Two strategies - simple index based or custom position value based
+        // If custom position, when items are moved they must have their position removed
+        // so they do not shift the other items
+
+        const sort = this.getSort();
+        this.trace('syncCurrentItems', sort);
+        if (sort.type === 'customPosition') {
+            this.syncCurrentItemsCustomPosition(sort.direction);
+        } else this.syncCurrentItemsInternalIndex(forceUpdate);
+
+        this.scheduleGetOutputs();
+    }
+
+    private syncCurrentItemsCustomPosition(direction: 'asc' | 'desc') {
+        /*
+        When using a custom sort position, the sort position is stored in the data source
+        rather than using the index of the items in the drop zone. 
+        This reduces the number of updates required, because if a moved item shifts other items
+        the sort position can be updated without having to update all the other items in the drop zone.
+        */
+
+        this.currentItems = [];
+        const preserveSort = this.context.parameters.PreserveSort.raw === true;
+        // Get the items from each dropzone and work out the new custom sort position
+        Object.entries(this.zonesRegistered).forEach((sortable) => {
+            const children = sortable[1].sortable.el.children;
+            const itemCount = children.length;
+            const reOrderableItems: ReOrderableItem[] = [];
+            // For each item, create a reOrderableItem setting the previous custom sort position
+            for (let i = 0; i <= itemCount; i++) {
+                const itemElement = sortable[1].sortable.el.children.item(i);
+
+                if (itemElement) {
+                    const itemAttributes = this.itemRenderer.getRowAttributes(itemElement as HTMLElement);
+
+                    reOrderableItems.push({
+                        DropZoneId: sortable[0],
+                        ItemId: itemAttributes.itemId,
+                        OriginalPosition: itemAttributes.originalSortPositionAttributeValue,
+                        OriginalDropZoneId: itemAttributes.originalZone,
+                    });
+                }
+            }
+            // update the new sort position where items are out of sequence
+            this.customSortStrategy.SetOptions({
+                positionIncrement: this.context.parameters.CustomSortIncrement?.raw ?? 1000,
+                sortOrder: direction,
+                allowNegative: this.context.parameters.CustomSortAllowNegative?.raw ?? true,
+                minimumIncrement: this.context.parameters.CustomSortMinIncrement?.raw ?? 10,
+            });
+            this.customSortStrategy.updateSortPosition(reOrderableItems);
+
+            // Add the updated items to the currentItems output dataset
+            reOrderableItems.forEach((item) => {
+                const position = preserveSort ? (item.OriginalPosition as number) : (item.Position as number);
+
+                this.currentItems.push({
+                    DropZoneId: item.DropZoneId,
+                    ItemId: item.ItemId,
+                    Position: position,
+                    OriginalPosition: item.OriginalPosition as number,
+                    OriginalDropZoneId: item.OriginalDropZoneId,
+                    HasMovedPosition: !preserveSort && item.HasMovedPosition === true,
+                    HasMovedZone: item.HasMovedZone === true,
+                });
+            });
+        });
+    }
+
+    private syncCurrentItemsInternalIndex(forceUpdate = false) {
+        /*
+        This strategy simply uses the position index of the item in the drop zone as its sort position.
+        This means when items are dropped or moved, they can shift and cause updates to multiple other items
+        */
+
         this.currentItems = [];
         Object.entries(this.zonesRegistered).forEach((sortable) => {
             const children = sortable[1].sortable.el.children;
@@ -251,24 +361,27 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                 const itemElement = sortable[1].sortable.el.children.item(i);
 
                 if (itemElement) {
-                    const itemId = itemElement?.getAttribute(RECORD_ID_ATTRIBUTE) as string;
-                    const originalPosition = parseInt(itemElement?.getAttribute(ORIGINAL_POSITION_ATTRIBUTE) as string);
-                    const originalZone = itemElement?.getAttribute(ORIGINAL_ZONE_ATTRIBUTE) as string;
+                    const itemAttributes = this.itemRenderer.getRowAttributes(itemElement as HTMLElement);
+
                     // If the sort is being preserved, the position is based on all the items rather than just the items in the zone
-                    const position = this.context.parameters.PreserveSort.raw === true ? originalPosition : i + 1;
+                    const positionIndex =
+                        this.context.parameters.SortDirection?.raw === SortDirection.Ascending ? i + 1 : itemCount - i;
+                    const position =
+                        this.context.parameters.PreserveSort.raw === true
+                            ? itemAttributes.originalSortPosition
+                            : positionIndex;
                     this.currentItems.push({
                         DropZoneId: sortable[0],
-                        ItemId: itemId,
+                        ItemId: itemAttributes.itemId,
                         Position: position,
-                        OriginalPosition: originalPosition,
-                        OriginalDropZoneId: originalZone,
-                        HasMovedPosition: originalPosition !== position,
-                        HasMovedZone: originalZone !== sortable[0],
+                        OriginalPosition: itemAttributes.originalSortPosition,
+                        OriginalDropZoneId: itemAttributes.originalZone,
+                        HasMovedPosition: forceUpdate || itemAttributes.originalSortPosition !== position,
+                        HasMovedZone: forceUpdate || itemAttributes.originalZone !== sortable[0],
                     });
                 }
             }
         });
-        this.notifyOutputChanged();
     }
 
     private clearCurrentItemChanges() {
@@ -278,19 +391,44 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             i.OriginalPosition = i.Position;
             i.OriginalDropZoneId = i.DropZoneId;
         });
+        this.scheduleGetOutputs();
+    }
+
+    private isEventScheduled(eventName: OutputEvents) {
+        return this.scheduledEvents[eventName] || false;
+    }
+
+    private scheduleEvent(eventName: OutputEvents, scheduled = true) {
+        if (scheduled) this.trace('Scheduling Event', eventName);
+        this.scheduledEvents[eventName] = scheduled;
+    }
+
+    private scheduleGetOutputs() {
+        this.trace('notifyOutputChanged');
         this.notifyOutputChanged();
     }
 
-    private raiseEvents() {
+    private raiseScheduledEvents(events: OutputEvents[]) {
         // Raise the OnDrop event if required - this is done after the output parameters are updated
-        if (this.raiseOnDropScheduled) {
-            this.raiseOnDropScheduled = false;
+        if (events.includes(OutputEvents.OnDrop) && this.isEventScheduled(OutputEvents.OnDrop)) {
+            this.scheduleEvent(OutputEvents.OnDrop, false);
+            this.trace('Raise OnDrop');
+            this.context.events.OnDrop();
+        }
+
+        if (
+            events.includes(OutputEvents.OnDropAfterSyncPositions) &&
+            this.isEventScheduled(OutputEvents.OnDropAfterSyncPositions)
+        ) {
+            this.scheduleEvent(OutputEvents.OnDropAfterSyncPositions, false);
+            this.trace('Raise OnDrop');
             this.context.events.OnDrop();
         }
 
         // Raise the OnAction event if required - this is done after the output parameters are updated
-        if (this.raiseOnActionScheduled) {
-            this.raiseOnActionScheduled = false;
+        if (events.includes(OutputEvents.OnAction) && this.isEventScheduled(OutputEvents.OnAction)) {
+            this.scheduleEvent(OutputEvents.OnAction, false);
+            this.trace('Raise OnAction');
             this.context.events.OnAction();
         }
     }
@@ -410,6 +548,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
     }
 
     private garbageCollect() {
+        this.trace(`garbageCollect ${this.sortablesToDestroy.length}`);
         this.sortablesToDestroy.forEach((s) => s.destroy());
         this.sortablesToDestroy = [];
     }
@@ -420,7 +559,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
         if (this.currentItemZone === null) {
             try {
                 zone.sortable.destroy();
-                zone.sortable.el.removeEventListener('click', zone.onActionClick);
+                if (zone.sortable.el) zone.sortable.el.removeEventListener('click', zone.onActionClick);
             } catch (e) {
                 this.trace('unRegisterZone Error', e);
             }
@@ -537,7 +676,7 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
             this.syncCurrentItems();
 
             this.trace(`drop id:${this.droppedId} position:${newPosition}`, currentItemsBefore, this.currentItems);
-            this.raiseOnDropScheduled = true;
+            this.scheduleEvent(OutputEvents.OnDrop);
 
             this.garbageCollect();
         } catch (e) {
@@ -583,11 +722,11 @@ export class PowerDragDrop implements ComponentFramework.StandardControl<IInputs
                     // Get the item id from the data attribute
                     const actionItemId = element.getAttribute(RECORD_ID_ATTRIBUTE);
                     if (actionItemId) {
-                        this.raiseOnActionScheduled = true;
+                        this.scheduleEvent(OutputEvents.OnAction);
                         // Remove the action specifier and raise the event
                         this.actionName = actionName.replace(CSS_STYLE_CLASSES.ActionClassPrefix, '');
                         this.actionItemId = actionItemId;
-                        this.notifyOutputChanged();
+                        this.scheduleGetOutputs();
                     }
                 }
             }
