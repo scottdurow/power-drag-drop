@@ -24,7 +24,7 @@
     "@types/sortablejs": "^1.15.0",
     "debounce": "^1.2.1",
     "dom-autoscroller": "^2.3.4",
-    "handlebars": "^4.7.7",
+    "handlebars": "^4.7.8",
     "html-escaper": "^3.0.3",
     "sanitize-html": "^2.7.3",
     "sortablejs": "^1.15.0",
