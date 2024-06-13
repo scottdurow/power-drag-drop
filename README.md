@@ -137,7 +137,7 @@ If you need to add action buttons to your template, you can do so by adding a cl
         border-radius: 8px;
 	">
 	<div>{{Name}}</div>
-	<button class="action-clickme">Click Me</buttom>
+	<button class="action-clickme">Click Me</button>
 </div>
 ```
 
